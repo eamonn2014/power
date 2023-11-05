@@ -91,13 +91,13 @@ Column {.sidebar}
   sliderInput('sims', 'Simulations (chart 2)', 50000,
                 min = 50000, max = 500000,step=50000,ticks=F)
   
-  sliderInput('x_range', 'Plot x-range', value = c(0,10),
-          min = 0, max = 80,step=5,ticks=F)
+  sliderInput('x_range', 'Plot x-range', value = c(0,800),
+          min = 0, max = 5000,step=100,ticks=F)
   
-  sliderInput('y_range', 'Plot y-range', value = c(0,.5),
+  sliderInput('y_range', 'Plot y-range', value = c(0,1),
           min = 0, max = 1,step=.05,ticks=F)
 
-  checkboxInput('perc','show stats on barplot', value=TRUE)
+  # checkboxInput('perc','show stats on barplot', value=TRUE)
   
      br()
                # numericInput(inputId=("Decksize"),  
@@ -127,17 +127,17 @@ Column {.sidebar}
        
        
        
-       
-           splitLayout(
-                               
-     textInput("beta",  div(h5(tags$span(style="color:blue", "beta"))),  
-               value= "0.10, 0.10,0.10, 0.10,0.10, 0.10"),  )
-           
-           
-            splitLayout(
-                               
-                       textInput("n",    div(h5(tags$span(style="color:blue",  "n"))),    
-                                 value= "100,100,100,100,100,100"), )
+     #   
+     #       splitLayout(
+     #                           
+     # textInput("beta",  div(h5(tags$span(style="color:blue", "beta"))),  
+     #           value= "0.10, 0.10,0.10, 0.10,0.10, 0.10"),  )
+     #       
+     #       
+     #        splitLayout(
+     #                           
+     #                   textInput("n",    div(h5(tags$span(style="color:blue",  "n"))),    
+     #                             value= "100,100,100,100,100,100"), )
            
             splitLayout(
                                
@@ -147,7 +147,7 @@ Column {.sidebar}
                splitLayout(
                                
                     textInput("p2",    div(h5(tags$span(style="color:blue", "p2"))),    
-                              value= "0.1,0.1,0.1,0.1,0.1,0.1"),)
+                              value= "0.1,0.12,0.13,0.15,0.4,0.05"),)
                                          
           
                splitLayout(
@@ -174,24 +174,24 @@ xx <- reactive({
     A6 <- A[6]
     
 
-    Ax <-   (as.numeric(unlist(strsplit(input$beta,","))))    
-    
-    B1 <- Ax[1]
-    B2 <- Ax[2]
-    B3 <- Ax[3]
-    B4 <- Ax[4]
-    B5 <- Ax[5]
-    B6 <- Ax[6] 
-
-
-    Ay<-   (as.numeric(unlist(strsplit(input$n,","))))    
-    
-    N1 <- Ay[1]
-    N2 <- Ay[2]
-    N3 <- Ay[3]
-    N4 <- Ay[4]
-    N5 <- Ay[5]
-    N6 <- Ay[6] 
+    # Ax <-   (as.numeric(unlist(strsplit(input$beta,","))))    
+    # 
+    # B1 <- Ax[1]
+    # B2 <- Ax[2]
+    # B3 <- Ax[3]
+    # B4 <- Ax[4]
+    # B5 <- Ax[5]
+    # B6 <- Ax[6] 
+    # 
+    # 
+    # Ay<-   (as.numeric(unlist(strsplit(input$n,","))))    
+    # 
+    # N1 <- Ay[1]
+    # N2 <- Ay[2]
+    # N3 <- Ay[3]
+    # N4 <- Ay[4]
+    # N5 <- Ay[5]
+    # N6 <- Ay[6] 
 
     Az<-   (as.numeric(unlist(strsplit(input$p1,","))))    
     
@@ -222,7 +222,7 @@ xx <- reactive({
     R6 <- Ab[6] 
               
     
-    sample_sizes <- seq(10, 800, by = 10)
+    sample_sizes <- seq(10, input$x_range[2], by = 10)
 power_values_1 <- bpower(n1 = sample_sizes*R1, n2 = sample_sizes*(1-R1), p1 = P1, p2 =  P1B, alpha = A1)
 power_values_2 <- bpower(n1 = sample_sizes*R2, n2 = sample_sizes*(1-R2), p1 = P2, p2 =  P2B, alpha = A2)
 power_values_3 <- bpower(n1 = sample_sizes*R3, n2 = sample_sizes*(1-R3), p1 = P3, p2 =  P3B, alpha = A3)
@@ -364,20 +364,20 @@ renderPlot({
                     group = interaction(ratio, variable),
                     colour = variable)) +
   geom_line() +
-  scale_color_manual(labels = c("p1=0.20, p2=0.15", "p1=0.20, p2=0.10", 
-                                "p1=0.30, p2=0.25", "p1=0.30, p2=0.20" ,
-                                "p1=0.25, p2=0.20", "p1=0.25, p2=0.15" 
+#  scale_color_manual(labels = c("p1=0.20, p2=0.15", "p1=0.20, p2=0.10", 
+ #                               "p1=0.30, p2=0.25", "p1=0.30, p2=0.20" ,
+  #                              "p1=0.25, p2=0.20", "p1=0.25, p2=0.15" 
                                 
-  ), values = c("red", "green", "blue", "purple","black","orange")) +
+  #), values = c("red", "green", "blue", "purple","black","orange")) +
   
-  scale_linetype_manual(values=c("solid",   "dashed")) +
+ # scale_linetype_manual(values=c("solid",   "dashed")) +
   
   
   #  geom_vline(xintercept = seq(0, 700, by = 50),  col = "gray", linetype = "solid",  linewidth = .25) +
   #   geom_hline(yintercept = seq(0, 1, by = 0.1), col = "gray", linetype = "solid",  linewidth = .25) +
   
   scale_y_continuous(breaks = seq(0, 1, by = 0.1),  limits = c(0,1)) +
-  scale_x_continuous(breaks = seq(0,800,50), limits = c(0,800)) +
+  scale_x_continuous(breaks = seq(0,input$x_range[2],50), limits = c(0,input$x_range[2])) +
   theme_bw() +
   #  theme(legend.position="none") +
   theme( 

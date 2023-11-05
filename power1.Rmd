@@ -230,15 +230,17 @@ power_values_4 <- bpower(n1 = sample_sizes*R4, n2 = sample_sizes*(1-R4), p1 = P4
 power_values_5 <- bpower(n1 = sample_sizes*R5, n2 = sample_sizes*(1-R5), p1 = P5, p2 =  P5B, alpha = A5)
 power_values_6 <- bpower(n1 = sample_sizes*R6, n2 = sample_sizes*(1-R6), p1 = P6, p2 =  P6B, alpha = A6)
  
-
+ 
+ 
+#https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
 # Create a data frame containing the sample sizes and power values
 power_df <- data.frame(sample_size = sample_sizes, 
-                       power_1 = power_values_1, 
-                       power_2 = power_values_2,
-                       power_3 = power_values_3, 
-                       power_4 = power_values_4,
-                       power_5 = power_values_5, 
-                       power_6 = power_values_6
+                       setNames(list(power_values_1), paste("prop",P1,P1B, sep="_")),
+                       setNames(list(power_values_2), paste("prop",P2,P2B, sep="_")),
+                       setNames(list(power_values_3), paste("prop",P3,P3B, sep="_")),
+                      setNames(list(power_values_4), paste("prop",P4,P4B, sep="_")),
+                      setNames(list(power_values_5), paste("prop",P5,P5B, sep="_")),
+                       setNames(list(power_values_6), paste("prop",P6,P6B, sep="_"))
 )
 
  

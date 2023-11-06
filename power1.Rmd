@@ -9,7 +9,7 @@ output:
     source_code: embed
 runtime: shiny
 ---
-Probability mass functions
+Binary endpoint
 ===
 
 ```{r global, include=FALSE}
@@ -20,11 +20,11 @@ Probability mass functions
   library(ggplot2)
   
    
-  library(gridExtra)
+ # library(gridExtra)
   library(tidyverse)
   
   library(Hmisc)
-  lwd.=3             # used when plotting
+ # lwd.=3             # used when plotting
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # function to format decimals
@@ -70,7 +70,7 @@ Probability mass functions
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Count data analysis is explored**
+**xxxx**
 
 ```{r tab1}
 
@@ -120,8 +120,8 @@ xx <- reactive({
     A1 <- A[1]
     A2 <- A[2]
     A3 <- A[3]
-    A4 <- A[5]
-    A5 <- A[6]
+    A4 <- A[4]
+    A5 <- A[5]
     A6 <- A[6]
     
  
@@ -167,7 +167,19 @@ xx <- reactive({
 # 
 #  
     
-  sample_sizes <- seq(10, input$x_range[2], by = 10)
+   sample_sizes <- seq(10, input$x_range[2], by = 10)
+  # 
+  # s = length(sample_sizes)
+  # 
+  # res = matrix(NA, length(6), 2)
+  # 
+  # for(i in 1:6) {
+  # res[i,1] <- sample_sizes/((eval(parse(text = paste0("R",(i)))))+1)
+  # res[i,2] <- eval(parse(text = paste0("R",(i))))* sample_sizes/(eval(parse(text = paste0("R",(i))))+1)
+  # }
+  
+   
+  
     
   power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
                            n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
@@ -231,7 +243,7 @@ x$variable <- rep(1:6, each=length(sample_sizes))
     
     return(list(  
       
-      x=x 
+      x=x #, res=res
      ))    
 
 
@@ -250,10 +262,14 @@ When $\alpha$ > 1, k < 1 leads to over dispersed data.
 $\alpha$ = 1/k ; k = 1/ $\alpha$ see next tab.
  
 
-Column {data-width=600, height=600}
------------------------------------------------------------------------
-### Chart 1
+<!-- Column {data-width=600, height=600} -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ### Chart 1 -->
 
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart 1
 
 ```{r tab1 plot1}
 
@@ -294,8 +310,8 @@ renderPlot({
   theme( 
     plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
      
-    legend.text=element_text(size=12),
-    legend.title=element_text(size=13, face="bold"),
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
     legend.position="right",
    #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
     legend.key.size = unit(1.3, "cm"),
@@ -318,8 +334,8 @@ renderPlot({
   
   
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability two sided. Ratio, see legend, >1 pertains to p1 larger sample and <1 p1 smaller sample.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
-  ggtitle(paste0("Endpoint option 1. Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
+  labs(caption = paste("- Ratio, see legend, >1 pertains to p1 larger sample and <1 p1 smaller sample. Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
+  ggtitle(paste0("Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
@@ -327,6 +343,46 @@ all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 print(all)
   
  })
+ 
+```
+
+### Listing
+
+```{r listing}
+
+ 
+ 
+  renderPrint({
+  
+    w <-  xx()$x
+    w$tag <- NULL
+    rownames(w) <- NULL  # refresh row names
+    print(w)
+    
+ 
+  })
+
+
+
+
+
+``` 
+```{r listing2}
+
+ 
+  # 
+  # renderPrint({
+  # 
+  #   w <-  xx()$res
+  #   rownames(w) <- NULL  # refresh row names
+  #   print(w)
+  #   
+  # 
+  # })
+
+
+
+
 
 ``` 
 <!-- ### Chart 2 -->

@@ -4,7 +4,7 @@ author:
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
-    vertical_layout: scroll
+    vertical_layout: fill
     social: menu
     source_code: embed
 runtime: shiny
@@ -75,70 +75,14 @@ Column {.sidebar}
 ```{r tab1}
 
   
-
-  # sliderInput('mu', 'Common  \u03BC', value=1.5,
-  #               min = 1, max = 25, step=.5, ticks=F)
-  # 
-  # sliderInput('alpha_a', '\u03B1 for red curve', value = c(1.3),
-  #               min = 0, max = 5 ,step=0.01, ticks=F)
-  # 
-  # sliderInput('alpha_b', '\u03B1 for dark blue curve', value = c(1.3),
-  #               min = 0, max = 5 ,step=0.01, ticks=F)
-  # 
-  # sliderInput('alpha_d', '\u03B1 for purple curve', value = c(1.3),
-  #               min = 0, max = 5 ,step=0.01, ticks=F)
-  
-  sliderInput('sims', 'Simulations (chart 2)', 50000,
-                min = 50000, max = 500000,step=50000,ticks=F)
-  
-  sliderInput('x_range', 'Plot x-range', value = c(0,800),
-          min = 0, max = 5000,step=100,ticks=F)
-  
-  sliderInput('y_range', 'Plot y-range', value = c(0,1),
-          min = 0, max = 1,step=.05,ticks=F)
-
-  # checkboxInput('perc','show stats on barplot', value=TRUE)
-  
-     br()
-               # numericInput(inputId=("Decksize"),  
-               #    label = tags$span(style="color:black;font-weight:bold;font-size: 16px;", 
-               #    "No of cards of each suit in deck") ,
-               #    value = 13, min=3,max=101, step=2)
-               # 
-               # numericInput(inputId=("swap"),   
-               #        label = tags$span(style="color:black;font-weight:bold;font-size: 16px;", 
-               #        "First card dealt") ,
-               #        value = 10, min=1,max=101, step=1)
-               #  
-               #  numericInput(inputId=("sims"),   
-               #         label = tags$span(style="color:black;font-weight:bold;font-size: 16px;", 
-               #          "No of simulations") ,
-               #           value = 1000, min=1000,max=1000000, step=1000) 
-               # 
-               #   
-
-       
-       
-       splitLayout(
+    splitLayout(
   textInput("alpha", div(h5(tags$span(style="color:blue", "alpha"))), 
             value= "0.05, 0.15,0.05, 0.05,0.05, 0.05"), 
                                          
                                        )
        
        
-       
-     #   
-     #       splitLayout(
-     #                           
-     # textInput("beta",  div(h5(tags$span(style="color:blue", "beta"))),  
-     #           value= "0.10, 0.10,0.10, 0.10,0.10, 0.10"),  )
-     #       
-     #       
-     #        splitLayout(
-     #                           
-     #                   textInput("n",    div(h5(tags$span(style="color:blue",  "n"))),    
-     #                             value= "100,100,100,100,100,100"), )
-           
+   
             splitLayout(
                                
                    textInput("p1",    div(h5(tags$span(style="color:blue", "p1"))),    
@@ -155,12 +99,19 @@ Column {.sidebar}
                 textInput("ro",    div(h5(tags$span(style="color:blue", "ro"))),   
                           value= "2,1,3,4,2,1"),)                                
                                         
-  					 
-                                         
-       
-       
+  
+  sliderInput('sims', 'Simulations (chart 2)', 50000,
+                min = 50000, max = 500000,step=50000,ticks=F)
+  
+  sliderInput('x_range', 'Plot x-range', value = c(0,800),
+          min = 0, max = 5000,step=100,ticks=F)
+  
+  sliderInput('y_range', 'Plot y-range', value = c(0,1),
+          min = 0, max = 1,step=.05,ticks=F)
 
-
+   
+     br()
+   
        
 xx <- reactive({
   
@@ -173,25 +124,7 @@ xx <- reactive({
     A5 <- A[6]
     A6 <- A[6]
     
-
-    # Ax <-   (as.numeric(unlist(strsplit(input$beta,","))))    
-    # 
-    # B1 <- Ax[1]
-    # B2 <- Ax[2]
-    # B3 <- Ax[3]
-    # B4 <- Ax[4]
-    # B5 <- Ax[5]
-    # B6 <- Ax[6] 
-    # 
-    # 
-    # Ay<-   (as.numeric(unlist(strsplit(input$n,","))))    
-    # 
-    # N1 <- Ay[1]
-    # N2 <- Ay[2]
-    # N3 <- Ay[3]
-    # N4 <- Ay[4]
-    # N5 <- Ay[5]
-    # N6 <- Ay[6] 
+ 
 
     Az<-   (as.numeric(unlist(strsplit(input$p1,","))))    
     
@@ -234,36 +167,30 @@ xx <- reactive({
 # 
 #  
     
-    sample_sizes <- seq(10, input$x_range[2], by = 10)
+  sample_sizes <- seq(10, input$x_range[2], by = 10)
     
-power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
-                         n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
-
-power_values_2 <- bpower(n1 = sample_sizes/(R2+1), 
-                         n2 = R2* sample_sizes/(1+R2), p1 = P2, p2 =  P2B, alpha = A2)
-
-power_values_3 <- bpower(n1 = sample_sizes/(R3+1), 
-                         n2 = R3* sample_sizes/(1+R3), p1 = P3, p2 =  P3B, alpha = A3)
-power_values_4 <- bpower(n1 = sample_sizes/(R4+1), 
-                         n2 = R4* sample_sizes/(1+R4), p1 = P4, p2 =  P4B, alpha = A4)
-power_values_5 <- bpower(n1 = sample_sizes/(R5+1), 
-                         n2 = R5* sample_sizes/(1+R5), p1 = P5, p2 =  P5B, alpha = A5)
-power_values_6 <- bpower(n1 = sample_sizes/(R6+1), 
-                         n2 = R6* sample_sizes/(1+R6), p1 = P6, p2 =  P6B, alpha = A6)
+  power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
+                           n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
+  
+  power_values_2 <- bpower(n1 = sample_sizes/(R2+1), 
+                           n2 = R2* sample_sizes/(1+R2), p1 = P2, p2 =  P2B, alpha = A2)
+  
+  power_values_3 <- bpower(n1 = sample_sizes/(R3+1), 
+                           n2 = R3* sample_sizes/(1+R3), p1 = P3, p2 =  P3B, alpha = A3)
+  
+  power_values_4 <- bpower(n1 = sample_sizes/(R4+1), 
+                           n2 = R4* sample_sizes/(1+R4), p1 = P4, p2 =  P4B, alpha = A4)
+  
+  power_values_5 <- bpower(n1 = sample_sizes/(R5+1), 
+                           n2 = R5* sample_sizes/(1+R5), p1 = P5, p2 =  P5B, alpha = A5)
+  
+  power_values_6 <- bpower(n1 = sample_sizes/(R6+1), 
+                           n2 = R6* sample_sizes/(1+R6), p1 = P6, p2 =  P6B, alpha = A6)
  
  
  
 #https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
-# Create a data frame containing the sample sizes and power values
-# power_df <- data.frame(sample_size = sample_sizes, 
-#                        setNames(list(power_values_1), paste("p1",P1,"p2",P1B, "alpha",A1, sep="_")),
-#                        setNames(list(power_values_2), paste("p1",P2,"p2",P2B, "alpha",A2, sep="_")),
-#                          setNames(list(power_values_3), paste("p1",P3,"p2",P3B, "alpha",A3, sep="_")),
-#                          setNames(list(power_values_4), paste("p1",P4,"p2",P4B, "alpha",A4, sep="_")),
-#                          setNames(list(power_values_5), paste("p1",P5,"p2",P5B, "alpha",A5, sep="_")),
-#                         setNames(list(power_values_6), paste("p1",P6,"p2",P6B, "alpha",A6, sep="_"))
-# )
-
+ 
  
 power_df <- data.frame(sample_size = sample_sizes, 
                          setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1, sep="_")),
@@ -274,15 +201,7 @@ power_df <- data.frame(sample_size = sample_sizes,
                          setNames(list(power_values_6), paste("x_6"  ,P6,P6B, A6, R6,sep="_"))
 )
 
- 
-# s <- str_split(z, "_")
-# A <- s[[1]][3]
-# B <- s[[1]][4]
-# C <- s[[1]][5]
-# 
-# phrase <- paste("p1=",A,"p2=",B,"alpha="C)
-
-
+  
 
 x <- reshape2::melt(power_df, id.vars="sample_size")
 
@@ -301,118 +220,30 @@ x$A <- x$B <- x$C <- x$s <- x$D <- NULL
 
 x$variable <- rep(1:6, each=length(sample_sizes)) 
 
-
-
-
-#x$ratio  <- "1:1"
-    
+ 
     
   x$variable <- factor(x$variable)
   
   library(dplyr)
   
   x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-
-# using filter(), top_n() or slice()
-
-#  tags <-
-#      x %>% 
-#       group_by(variable) %>% 
-#       filter(row_number()==1) %>% select(phrase)
-# 
-# tags$i <- paste(as.character(tags$id),as.character(tags$phrase))
-
-    # return(list(  
-    #   
-    #   A1=A1, A2=A2,A3=A3,A4=A4,A5,A5,A6=A6,
-    #   B1=B1,B2=B2,B3=B3,B4=B4,B5=B5, B6=B6,
-    #   N1=N1,N2=N2,N3=N3,N4=N4,N5=N5,N6=N6,
-    #   P1=P1,P2=P2,P3=P3,P4=P4,P5=P5,P6=P6,
-    #   P1B=P1B,P2B=P2B,P3B=P3B,P4B=P4B,P5B=P5B,P6B=P6B,
-    #    R1=R1,R2=R2,R3=R3,R4=R4,R5=R5,R6=R6
-    #  ))
-    
+ 
     
     return(list(  
       
-      x=x# , tags= as.character(tags$i)
+      x=x 
      ))    
 
 
 
 })
 
-                
-
-
-       
-# calc <- reactive({
-# 
-# 
-#   
-#   
-# sample_sizes <- seq(10, 800, by = 10)
-# power_values_1 <- bpower(n1 = sample_sizes*xx()$R1, n2 = sample_sizes*(1-xx()$R1), p1 = xx()$P1, p2 =  xx()$P1B, alpha = xx()$A1)
-# power_values_2 <- bpower(n1 = sample_sizes*xx()$R2, n2 = sample_sizes*(1-xx()$R2), p1 = xx()$P2, p2 =  xx()$P2B, alpha = xx()$A2)
-#  
-# 
-# power_values_3 <-  bpower(n1 = sample_sizes*xx()$R3, n2 = sample_sizes*(1-xx()$R3), p1 = xx()$P3, p2 =  xx()$P3B, alpha = xx()$A3)
-# power_values_4 <-  bpower(n1 = sample_sizes*xx()$R4, n2 = sample_sizes*(1-xx()$R4), p1 = xx()$P4, p2 =  xx()$P4B, alpha = xx()$A4)
-# 
-# power_values_5 <-  bpower(n1 = sample_sizes*xx()$R5, n2 = sample_sizes*(1-xx()$R5), p1 = xx()$P5, p2 =  xx()$P5B, alpha = xx()$A5)
-# power_values_6 <-  bpower(n1 = sample_sizes*xx()$R6, n2 = sample_sizes*(1-xx()$R6), p1 = xx()$P6, p2 =  xx()$P6B, alpha = xx()$A6)
-# 
-# # Create a data frame containing the sample sizes and power values
-# power_df <- data.frame(sample_size = sample_sizes, 
-#                        power_1 = power_values_1, 
-#                        power_2 = power_values_2,
-#                        power_3 = power_values_3, 
-#                        power_4 = power_values_4,
-#                        power_5 = power_values_5, 
-#                        power_6 = power_values_6
-# )
-# 
-#  
-# 
-# 
-# 
-# x <- reshape2::melt(power_df, id.vars="sample_size")
-#  
-# 
-# x$ratio  <- "1:1"
-#  
-# 
-#  
-# 
-#           
-#     
-#     return(list(  
-#     x=x
-#       
-#      ))
-#     
-# 
-# })
-# 
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
+ 
 ```
 
-$\alpha$ takes on positive rational values, rarely above 4 (ref 11 page 190). Values of $\alpha$ greater than 2 usually indicate that there is substantial over-dispersion.
+$\alpha$ xxxxxxxxxxxxx $\alpha$ xxxxxxxxxxxxx.
 
-When $\alpha$ approaches 0, k approaches infinity and Poisson emerges (move red $\alpha$ slider to 0).
+When $\alpha$ xxxxxxxxxxx (move red $\alpha$ slider to 0).
 
 When $\alpha$ > 1, k < 1 leads to over dispersed data.
 
@@ -429,11 +260,6 @@ Column {data-width=600, height=600}
 renderPlot({
   
   p =      xx()$x
-  
- #  tag = xx()$tags
-  # tags <- as.character(phrase$phrase2)
-  
- # p$variable<-sub("_", "_ \n ", p$variable)  
   
   skips <- ifelse(input$x_range[2] <= 1000, 50,
                 ifelse(input$x_range[2] > 1000 & input$x_range[2] < 3000 ,200
@@ -454,14 +280,7 @@ renderPlot({
     scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
                         values = c("red", "green", "blue", "purple","black","orange")) +
                                 
-  #), values = c("red", "green", "blue", "purple","black","orange"))
-    
-# scale_color_manual(labels = c("p1=0.20, p2=0.15", "p1=0.20, p2=0.10", 
- #                               "p1=0.30, p2=0.25", "p1=0.30, p2=0.20" ,
-  #                              "p1=0.25, p2=0.20", "p1=0.25, p2=0.15" 
-                                
-  #), values = c("red", "green", "blue", "purple","black","orange")) +
-  
+ 
  # scale_linetype_manual(values=c("solid",   "dashed")) +
   
   
@@ -473,34 +292,24 @@ renderPlot({
   theme_bw() +
   #  theme(legend.position="none") +
   theme( 
-    plot.title=element_text(size = 12), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-   legend.text=element_text(size=10),
-    legend.title=element_text(size=10),
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+     
+    legend.text=element_text(size=12),
+    legend.title=element_text(size=13, face="bold"),
     legend.position="right",
-    
-  # legend.key.size = unit(12, "pt"),  # legend horizontal bar length
-    
-    # legend.key = element_rect(linewidth = 15), # this is ok
-         
-   # legend.text = element_text(margin = margin(r = 10, unit = "pt"), size=10),
-    #  legend.text = element_text(margin = margin(r = 2, unit = 'cm'), size=10),
-    # 
-    # legend.spacing.y = unit(0.5, 'cm'), #space under legend title
-    # 
-   
    #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-      legend.key.size = unit(1.3, "cm"),
+    legend.key.size = unit(1.3, "cm"),
     legend.key = element_rect(color = NA, fill = NA),
     
-    axis.text.x  = element_text(size=10),
-    axis.text.y  = element_text(size=10),
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
     axis.line.x = element_line(color="black"),
     axis.line.y = element_line(color="black"),
-    plot.caption=element_text(hjust = 0, size = 7),
+   
+    plot.caption=element_text(hjust = 0, size = 12),
     strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(1), angle = 90),
-    axis.title.x = element_text(size = rel(1), angle = 0 ),
-    
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
     
     strip.background = element_rect(colour = "black", fill = "white"),
     panel.background = element_rect(fill = 'white', colour = 'white'),
@@ -509,34 +318,23 @@ renderPlot({
   
   
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability = 0.05 two sided. Ratio 1:2 pertains to larger sample in experimental arm.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
-  ggtitle(paste0("Endpoint option 1. Power (or sample size) for difference in two proportions for evaluation of treatment effect on mortality rate.") ) 
-
+  labs(caption = paste("- Alpha the type I assertion probability two sided. Ratio, see legend, >1 pertains to p1 larger sample and <1 p1 smaller sample.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
+  ggtitle(paste0("Endpoint option 1. Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 
 print(all)
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
- }
-)
+ })
 
 ``` 
-### Chart 2
+<!-- ### Chart 2 -->
 
-```{r, tab1 plot2}
- 
+<!-- ```{r, tab1 plot2} -->
 
-```  
+
+<!-- ```   -->
 
 References
 ====

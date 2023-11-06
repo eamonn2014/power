@@ -22,7 +22,7 @@ Binary endpoint
    
  # library(gridExtra)
   library(tidyverse)
-  
+  library(plotly)
   library(Hmisc)
  # lwd.=3             # used when plotting
   
@@ -228,6 +228,11 @@ x$C <- sapply( xx, "[", 5 )
 x$D <- sapply( xx, "[", 6 ) 
 
 x$phrase <- paste("p1=",x$A,"p2=",x$B,"\nalpha=",x$C, "ratio=",x$D)
+
+x$r <- ifelse(x$D !=1,"Variable","Equal")  # new
+ # x$r <- factor(x$r)
+
+
 x$A <- x$B <- x$C <- x$s <- x$D <- NULL
 
 x$variable <- rep(1:6, each=length(sample_sizes)) 
@@ -287,7 +292,7 @@ renderPlot({
                     stringsAsFactors=FALSE)
   
   
-  all <-ggplot(p, aes(x = sample_size, y = value, #linetype=ratio,
+  all <-ggplot(p, aes(x = sample_size, y = value, linetype=r,
                     #group = interaction(ratio, variable),
                     group=variable,
                     colour = variable)) +
@@ -333,8 +338,8 @@ renderPlot({
   ) +
   
   
-  labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Ratio, see legend, >1 pertains to p1 larger sample and <1 p1 smaller sample. Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
+  labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio" )+
+  labs(caption = paste("- Ratio, see legend, >1 pertains to when p1 is the larger sample size and <1 when p1 is the smaller sample size.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
   ggtitle(paste0("Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -342,6 +347,7 @@ all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 
 print(all)
   
+#ggplotly(all)
  })
  
 ```

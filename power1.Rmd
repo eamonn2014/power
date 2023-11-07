@@ -162,7 +162,16 @@ xx <- reactive({
 # k <- 1
 # S <- 200
 # 
+#  A1 <- A2 <- A3 <- A4 <- A5 <- A6 <- .05
+# 
+# P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- .2 
+# 
+# P1B <- P2B <- P3B <- P4B <- P5B <- P6B <- .4 
 #  
+# R1 <- R2 <- R3 <- R4 <- R5 <- R6 <- 1
+
+ ##sample_sizes <- seq(10, 100, by = 10)
+  # 
     
    sample_sizes <- seq(10, input$x_range[2], by = 10)
   # 
@@ -210,67 +219,71 @@ xx <- reactive({
    
   
     
-  power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
-                           n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
-  
-  power_values_2 <- bpower(n1 = sample_sizes/(R2+1), 
-                           n2 = R2* sample_sizes/(1+R2), p1 = P2, p2 =  P2B, alpha = A2)
-  
-  power_values_3 <- bpower(n1 = sample_sizes/(R3+1), 
-                           n2 = R3* sample_sizes/(1+R3), p1 = P3, p2 =  P3B, alpha = A3)
-  
-  power_values_4 <- bpower(n1 = sample_sizes/(R4+1), 
-                           n2 = R4* sample_sizes/(1+R4), p1 = P4, p2 =  P4B, alpha = A4)
-  
-  power_values_5 <- bpower(n1 = sample_sizes/(R5+1), 
-                           n2 = R5* sample_sizes/(1+R5), p1 = P5, p2 =  P5B, alpha = A5)
-  
-  power_values_6 <- bpower(n1 = sample_sizes/(R6+1), 
-                           n2 = R6* sample_sizes/(1+R6), p1 = P6, p2 =  P6B, alpha = A6)
- 
- 
- 
-#https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
- 
-  # put together
- 
-power_df <- data.frame(sample_size = sample_sizes, 
-                         setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1,sep="_")),
-                         setNames(list(power_values_2), paste("x_2"  ,P2,P2B, A2, R2,sep="_")),
-                         setNames(list(power_values_3), paste("x_3"  ,P3,P3B, A3, R3,sep="_")),
-                         setNames(list(power_values_4), paste("x_4"  ,P4,P4B, A4, R4,sep="_")),
-                         setNames(list(power_values_5), paste("x_5"  ,P5,P5B, A5, R5,sep="_")),
-                         setNames(list(power_values_6), paste("x_6"  ,P6,P6B, A6, R6,sep="_"))
-)
-
-  
-
-x <- reshape2::melt(power_df, id.vars="sample_size")
+#   power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
+#                            n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
+#   
+#   power_values_2 <- bpower(n1 = sample_sizes/(R2+1), 
+#                            n2 = R2* sample_sizes/(1+R2), p1 = P2, p2 =  P2B, alpha = A2)
+#   
+#   power_values_3 <- bpower(n1 = sample_sizes/(R3+1), 
+#                            n2 = R3* sample_sizes/(1+R3), p1 = P3, p2 =  P3B, alpha = A3)
+#   
+#   power_values_4 <- bpower(n1 = sample_sizes/(R4+1), 
+#                            n2 = R4* sample_sizes/(1+R4), p1 = P4, p2 =  P4B, alpha = A4)
+#   
+#   power_values_5 <- bpower(n1 = sample_sizes/(R5+1), 
+#                            n2 = R5* sample_sizes/(1+R5), p1 = P5, p2 =  P5B, alpha = A5)
+#   
+#   power_values_6 <- bpower(n1 = sample_sizes/(R6+1), 
+#                            n2 = R6* sample_sizes/(1+R6), p1 = P6, p2 =  P6B, alpha = A6)
+#  
+#  
+#  
+# #https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
+#  
+#   # put together
+#  
+# power_df <- data.frame(sample_size = sample_sizes, 
+#                          setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1,sep="_")),
+#                          setNames(list(power_values_2), paste("x_2"  ,P2,P2B, A2, R2,sep="_")),
+#                          setNames(list(power_values_3), paste("x_3"  ,P3,P3B, A3, R3,sep="_")),
+#                          setNames(list(power_values_4), paste("x_4"  ,P4,P4B, A4, R4,sep="_")),
+#                          setNames(list(power_values_5), paste("x_5"  ,P5,P5B, A5, R5,sep="_")),
+#                          setNames(list(power_values_6), paste("x_6"  ,P6,P6B, A6, R6,sep="_"))
+# )
+# 
+#   
+# 
+# x <- reshape2::melt(power_df, id.vars="sample_size")
 
 # exrract info for labels
-xx <- stringr::str_split(x$variable, "_")
+# xx <- stringr::str_split(x$variable, "_")
+# 
+#  # https://stackoverflow.com/questions/41336606/accessing-element-of-a-split-string
+# 
+# x$A <- sapply( xx, "[", 3 )
+# x$B <- sapply( xx, "[", 4 )
+# x$C <- sapply( xx, "[", 5 ) 
+# x$D <- sapply( xx, "[", 6 ) 
 
- # https://stackoverflow.com/questions/41336606/accessing-element-of-a-split-string
+x <- res
 
-x$A <- sapply( xx, "[", 3 )
-x$B <- sapply( xx, "[", 4 )
-x$C <- sapply( xx, "[", 5 ) 
-x$D <- sapply( xx, "[", 6 ) 
+x$phrase <- with(x, paste("p1=",x$P1,"p2=",x$P2,"\nalpha=",x$alpha, "ratio=",x$ratio))
 
-x$phrase <- paste("p1=",x$A,"p2=",x$B,"\nalpha=",x$C, "ratio=",x$D)
-
-x$r <- ifelse(x$D !=1,"Unequal","Equal")  # new
+x$r <- ifelse(x$ratio !=1,"Unequal","Equal")  # new
  
-x$A <- x$B <- x$C <- x$s <- x$D <- NULL
+# x$A <- x$B <- x$C <- x$s <- x$D <- NULL
 
 x$variable <- rep(1:6, each=length(sample_sizes)) 
 
- 
+ x$variable <- x$Index
     
   x$variable <- factor(x$variable)
   
  # library(dplyr)
   
+ # x$tag <-   as.character(x$phrase)
+ 
   x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
  
     
@@ -316,7 +329,7 @@ renderPlot({
                     stringsAsFactors=FALSE)
   
   
-  all <-ggplot(p, aes(x = sample_size, y = value, linetype=r,
+  all <-ggplot(p, aes(x = N, y = power, linetype=r,
                     #group = interaction(ratio, variable),
                     group=variable,
                     colour = variable)) +

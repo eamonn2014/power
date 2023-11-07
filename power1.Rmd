@@ -76,7 +76,7 @@ Column {.sidebar}
 
   
     splitLayout(
-  textInput("alpha", div(h5(tags$span(style="color:blue", "alpha"))), 
+  textInput("alpha", div(h5(tags$span(style="color:blue", "alpha (type I error"))), 
             value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
                                          
                                        )
@@ -84,18 +84,18 @@ Column {.sidebar}
    
             splitLayout(
                                
-                   textInput("p1",    div(h5(tags$span(style="color:blue", "p1"))),    
+                   textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion p1"))),    
                              value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
            
                splitLayout(
                                
-                    textInput("p2",    div(h5(tags$span(style="color:blue", "p2"))),    
+                    textInput("p2",    div(h5(tags$span(style="color:blue", "hypothesised proportion p2"))),    
                               value= "0.1,0.1,0.1,0.25,0.3,0.4"),)
                                          
           
                splitLayout(
                                
-                textInput("ro",    div(h5(tags$span(style="color:blue", "ro"))),   
+                textInput("ro",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisatoin"))),   
                           value= "1,2,3,1,2,3"),)                                
                                         
   
@@ -204,7 +204,7 @@ xx <- reactive({
       res <- plyr::arrange(res,Index ,N)
       res$n1 <- round(res$n1,2)
        res$n2 <- round(res$n2,2)
-
+ res$power <- round(res$power,4)
 #-------------------------------------------------------
    
   
@@ -331,8 +331,9 @@ renderPlot({
   #  geom_vline(xintercept = seq(0, 700, by = 50),  col = "gray", linetype = "solid",  linewidth = .25) +
   #   geom_hline(yintercept = seq(0, 1, by = 0.1), col = "gray", linetype = "solid",  linewidth = .25) +
   
-  scale_y_continuous(breaks = seq(0, 1, by = 0.1),  limits = c(0,1)) +
-  scale_x_continuous(breaks = seq(0,input$x_range[2],skips), limits = c(0,input$x_range[2])) +
+  scale_y_continuous(breaks = seq(input$y_range[1], input$y_range[2], by = 0.1),  
+                     limits = c(input$y_range[1], input$y_range[2])) +
+  scale_x_continuous(breaks = seq(input$x_range[1],input$x_range[2],skips), limits = c(input$x_range[1],input$x_range[2])) +
   theme_bw() +
   #  theme(legend.position="none") +
   theme( 
@@ -414,7 +415,7 @@ print(all)
 
  DT::renderDataTable({
     
-    require(gtools)
+ #   require(gtools)
     
     w1 <-  xx()$res
     
@@ -431,13 +432,7 @@ print(all)
                   ))
 })
   
-#DT::dataTableOutput("mytable")
-
-#  DT::datatable(mtcars, options = list(
-#   bPaginate = FALSE
-# ))
-
-
+ 
 
 
 

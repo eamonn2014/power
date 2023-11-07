@@ -70,7 +70,7 @@ Binary endpoint
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**xxxx**
+**Enter parameters of interest**
 
 ```{r tab1}
 
@@ -99,8 +99,8 @@ Column {.sidebar}
                           value= "1,2,3,1,2,3"),)                                
                                         
   
-  sliderInput('sims', 'Simulations (chart 2)', 50000,
-                min = 50000, max = 500000,step=50000,ticks=F)
+  # sliderInput('sims', 'Simulations (chart 2)', 50000,
+  #               min = 50000, max = 500000,step=50000,ticks=F)
   
   sliderInput('x_range', 'Plot x-range', value = c(0,800),
           min = 0, max = 5000,step=100,ticks=F)
@@ -122,9 +122,7 @@ xx <- reactive({
     A4 <- A[4]
     A5 <- A[5]
     A6 <- A[6]
-    
- 
-
+  
     Az<-   (as.numeric(unlist(strsplit(input$p1,","))))    
     
     P1 <- Az[1]
@@ -168,15 +166,46 @@ xx <- reactive({
     
    sample_sizes <- seq(10, input$x_range[2], by = 10)
   # 
-  # s = length(sample_sizes)
+   #---------------------------------------------------------------
+ #  trying to get n1 n2 ...etc and power to list, inefficient as I do the calc again!
+  s = length(sample_sizes)
   # 
-  # res = matrix(NA, length(6), 2)
+   res = matrix(NA, 6*s, 9)
+   
+      x <- s*6
+      
+      ind <- 1
   # 
-  # for(i in 1:6) {
-  # res[i,1] <- sample_sizes/((eval(parse(text = paste0("R",(i)))))+1)
-  # res[i,2] <- eval(parse(text = paste0("R",(i))))* sample_sizes/(eval(parse(text = paste0("R",(i))))+1)
-  # }
-  
+    for (j in 1:s) {
+   
+    for(i in 1:6) {
+   
+           res[ind,1] <- i     # group 
+           res[ind,2] <- sample_sizes[j]  # total sample size
+    n1 <-  res[ind,3] <- sample_sizes[j]/((eval(parse(text = paste0("R",(i)))))+1)  # n1
+    n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/(eval(parse(text = paste0("R",(i))))+1) # n2
+    r <-   res[ind,5] <-(eval(parse(text = paste0("R",(i)))))      # ratio
+    p1 <-  res[ind,6] <-(eval(parse(text = paste0("P",(i)))))      # p1
+    p2 <-  res[ind,7] <-(eval(parse(text = paste0("P",(i),"B"))))  # p2
+    a1 <-  res[ind,8] <-(eval(parse(text = paste0("A",(i)))))      # alpha
+    
+    # do the calculation
+     res[ind,9]  <- bpower(n1 = n1, 
+                           n2 =n2, p1 = p1, p2 =  p2, alpha = a1)
+      
+      
+      
+   ind=ind+1
+  }
+    }
+      
+      res<- data.frame(res)
+      names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")
+      res <- plyr::arrange(res,Index ,N)
+      res$n1 <- round(res$n1,2)
+       res$n2 <- round(res$n2,2)
+
+#-------------------------------------------------------
    
   
     
@@ -202,9 +231,10 @@ xx <- reactive({
  
 #https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
  
+  # put together
  
 power_df <- data.frame(sample_size = sample_sizes, 
-                         setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1, sep="_")),
+                         setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1,sep="_")),
                          setNames(list(power_values_2), paste("x_2"  ,P2,P2B, A2, R2,sep="_")),
                          setNames(list(power_values_3), paste("x_3"  ,P3,P3B, A3, R3,sep="_")),
                          setNames(list(power_values_4), paste("x_4"  ,P4,P4B, A4, R4,sep="_")),
@@ -216,7 +246,7 @@ power_df <- data.frame(sample_size = sample_sizes,
 
 x <- reshape2::melt(power_df, id.vars="sample_size")
 
-
+# exrract info for labels
 xx <- stringr::str_split(x$variable, "_")
 
  # https://stackoverflow.com/questions/41336606/accessing-element-of-a-split-string
@@ -229,9 +259,7 @@ x$D <- sapply( xx, "[", 6 )
 x$phrase <- paste("p1=",x$A,"p2=",x$B,"\nalpha=",x$C, "ratio=",x$D)
 
 x$r <- ifelse(x$D !=1,"Unequal","Equal")  # new
- # x$r <- factor(x$r)
-
-
+ 
 x$A <- x$B <- x$C <- x$s <- x$D <- NULL
 
 x$variable <- rep(1:6, each=length(sample_sizes)) 
@@ -240,14 +268,14 @@ x$variable <- rep(1:6, each=length(sample_sizes))
     
   x$variable <- factor(x$variable)
   
-  library(dplyr)
+ # library(dplyr)
   
   x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
  
     
     return(list(  
       
-      x=x #, res=res
+      x=x , res=res
      ))    
 
 
@@ -257,13 +285,9 @@ x$variable <- rep(1:6, each=length(sample_sizes))
  
 ```
 
-$\alpha$ xxxxxxxxxxxxx $\alpha$ xxxxxxxxxxxxx.
+$\alpha$ type I assertion error $\beta$ not required
 
-When $\alpha$ xxxxxxxxxxx (move red $\alpha$ slider to 0).
 
-When $\alpha$ > 1, k < 1 leads to over dispersed data.
-
-$\alpha$ = 1/k ; k = 1/ $\alpha$ see next tab.
  
 
 <!-- Column {data-width=600, height=600} -->
@@ -357,33 +381,83 @@ print(all)
 
  
  
-  renderPrint({
-  
-    w <-  xx()$x
-    w$tag <- NULL
-    rownames(w) <- NULL  # refresh row names
-    print(w)
-    
- 
-  })
-
-
-
-
-
-``` 
-```{r listing2}
-
- 
-  # 
   # renderPrint({
   # 
-  #   w <-  xx()$res
+  #   w <-  xx()$x
+  #   w$tag <- NULL
   #   rownames(w) <- NULL  # refresh row names
   #   print(w)
   #   
   # 
   # })
+  # 
+  # 
+
+
+
+``` 
+
+```{r listing2}
+
+ 
+
+  # renderPrint({
+  # 
+  #   w1 <-  xx()$res
+  #   rownames(w1) <- NULL  # refresh row names
+  #   print(w1)
+  # 
+  # 
+  # })
+
+
+
+ DT::renderDataTable({
+    
+    require(gtools)
+    
+    w1 <-  xx()$res
+    
+      
+    
+    DT::datatable(w1, rownames=FALSE,
+                  plugins = 'natural',
+                #  colnames=c('Patient ID' = 'id', 'Total AEs per patient' = 'tot.AE', 'Count of AEs per patient'='count.AE',
+                 #            'Treatment'='treatment','Duplicate SOC?'= 'duplicate.soc.flag',
+                  #           'Duplicate PT?'='duplicate.pt.flag'),
+                  options = list(
+                    # dom = 't',
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+})
+  
+#DT::dataTableOutput("mytable")
+
+#  DT::datatable(mtcars, options = list(
+#   bPaginate = FALSE
+# ))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

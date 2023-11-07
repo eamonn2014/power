@@ -183,7 +183,8 @@ xx <- reactive({
            res[ind,1] <- i     # group 
            res[ind,2] <- sample_sizes[j]  # total sample size
     n1 <-  res[ind,3] <- sample_sizes[j]/((eval(parse(text = paste0("R",(i)))))+1)  # n1
-    n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/(eval(parse(text = paste0("R",(i))))+1) # n2
+    n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/
+                        (eval(parse(text = paste0("R",(i))))+1) # n2
     r <-   res[ind,5] <-(eval(parse(text = paste0("R",(i)))))      # ratio
     p1 <-  res[ind,6] <-(eval(parse(text = paste0("P",(i)))))      # p1
     p2 <-  res[ind,7] <-(eval(parse(text = paste0("P",(i),"B"))))  # p2

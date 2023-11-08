@@ -368,7 +368,7 @@ Column {.sidebar}
   
           splitLayout(
           textInput("hrs",    div(h5(tags$span(style="color:blue", "hazard ratio"))),    
-          value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
+          value= "2,1.5,0.9,0.8,0.51,0.3"),)
            
           splitLayout(
           textInput("sidess",    div(h5(tags$span(style="color:blue", "one or two sided"))),    
@@ -399,7 +399,7 @@ s1 <- reactive({
     A5 <- A[5]
     A6 <- A[6]
   
-    Az<-   (as.numeric(unlist(strsplit(input$hrs,","))))    
+    realHR <- Az<-   (as.numeric(unlist(strsplit(input$hrs,","))))    
     
     P1 <- Az[1]
     P2 <- Az[2]
@@ -439,6 +439,8 @@ s1 <- reactive({
 # S <- 200
 # 
 #  A1 <- A2 <- A3 <- A4 <- A5 <- A6 <- .05
+    
+  #  realHR <- c(A1,A2,A3,A4,A5,A6)
 # 
 # P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- .5
 # 
@@ -447,11 +449,52 @@ s1 <- reactive({
 # R1 <- R2 <- R3 <- R4 <- R5 <- R6 <- 1
 # 
 #  sample_sizes <- seq(10, 100, by = 10)
-  # 
+
     
    sample_sizes <- seq(10, input$x_ranges[2], by = 10)
    
-   P1<-ifelse(P1<1, 1/P1, P1)
+   # when hr > 1  gsDesign::nEvents odd results so I reciprocate in that case
+   
+#   for (i in 1:6) {
+     
+  # tmp <-  eval(parse(text = paste0("P",(i))))   
+   
+   # eval(parse(text = paste0("P",(i))))<-
+   #   ifelse(eval(parse(text = paste0("P",(i))))<1, 1/eval(parse(text = paste0("P",(i)))), eval(parse(text = paste0("P",(i)))))
+   
+    # paste0("P",(i)) <- tmp
+   
+#}
+   
+ 
+# P1 <- 0.5
+# P2 <- 1.2
+# P3 <- 0.8
+# P4 <- 2.5
+# P5 <- 0.7
+# P6 <- 1.0   
+#  
+# List of objects
+objects_list <- list(P1, P2, P3, P4, P5, P6)
+
+object_names <- c("P1", "P2", "P3", "P4", "P5", "P6")
+
+note <-  objects_list > 1
+
+# Function to replace the value with its reciprocal if less than 1
+replace_with_reciprocal <- function(x) {
+  if (x > 1) {
+    x <- 1 / x
+  }
+  return(x)
+} 
+
+for (object_name in object_names) {
+  assign(object_name, replace_with_reciprocal(get(object_name)))
+} 
+
+
+   
     
 A <- gsDesign::nEvents(hr = P1, n = sample_sizes, tbl = TRUE , alpha=A1, sided =P1B, ratio=R1)
 B <- gsDesign::nEvents(hr = P2, n =sample_sizes, tbl = TRUE , alpha=A2, sided =P2B, ratio=R2)
@@ -462,12 +505,15 @@ D <- gsDesign::nEvents(hr = P4, n =sample_sizes, tbl = TRUE , alpha=A4, sided =P
 E <- gsDesign::nEvents(hr = P5, n =sample_sizes, tbl = TRUE , alpha=A5, sided =P5B, ratio =R5)
 F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =P6B,  ratio =R6)
      
-   
+# gsDesign::nEvents(hr = 2, n = seq(10, 100, by = 10), hr0=2, tbl = TRUE , alpha=.05, sided =2,  ratio =1)
+     
    
   # 
   #---------------------------------------------------------------
   
   x <- rbind(A,B,C,D, E, F)
+ 
+  
  
   #-----------------------------------------------------------------------    
 
@@ -475,7 +521,17 @@ F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =
   x$n2 <- x$n / (x$ratio + 1)
   x$n1 <- x$ratio * x$n2
   
+  # real HR goes back as we flipped those >1 and it would be confusing on legend
+  
+ 
+  
+  x$hr <- rep(realHR, each=length(sample_sizes)) 
+  
   x$hr <- factor(x$hr)
+  
+  
+  
+  
  res <- x
       res<- data.frame(res)
       #names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")

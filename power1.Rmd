@@ -75,41 +75,31 @@ Column {.sidebar}
 ```{r tab1}
 
   
-    splitLayout(
-  textInput("alpha", div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
-            value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
-                                         
+          splitLayout(
+          textInput("alpha", div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
+          value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
                                        )
-        
-   
-            splitLayout(
-                               
-                   textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion p1"))),    
-                             value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
+  
+          splitLayout(
+          textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion p1"))),    
+          value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
            
-               splitLayout(
-                               
-                    textInput("p2",    div(h5(tags$span(style="color:blue", "hypothesised proportion p2"))),    
-                              value= "0.1,0.1,0.1,0.25,0.3,0.4"),)
+          splitLayout(
+          textInput("p2",    div(h5(tags$span(style="color:blue", "hypothesised proportion p2"))),    
+          value= "0.1,0.1,0.1,0.25,0.3,0.4"),)
                                          
-          
-               splitLayout(
-                               
-                textInput("ro",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-                          value= "1,2,3,1,2,3"),)                                
+          splitLayout(
+          textInput("ro",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
+          value= "1,2,3,1,2,3"),)                                
                                         
-  
-  # sliderInput('sims', 'Simulations (chart 2)', 50000,
-  #               min = 50000, max = 500000,step=50000,ticks=F)
-  
-  sliderInput('x_range', 'Plot x-range', value = c(0,800),
-          min = 0, max = 5000,step=100,ticks=F)
-  
-  sliderInput('y_range', 'Plot y-range', value = c(0,1),
-          min = 0, max = 1,step=.05,ticks=F)
+          sliderInput('x_range', 'Plot x-range', value = c(0,800),
+                  min = 0, max = 5000,step=100,ticks=F)
+          
+          sliderInput('y_range', 'Plot y-range', value = c(0,1),
+                  min = 0, max = 1,step=.05,ticks=F)
 
    
-     br()
+          br()
    
        
 xx <- reactive({
@@ -177,122 +167,70 @@ xx <- reactive({
   # 
    #---------------------------------------------------------------
  #  trying to get n1 n2 ...etc and power to list, inefficient as I do the calc again!
-  s = length(sample_sizes)
-  # 
-   res = matrix(NA, 6*s, 9)
+    s = length(sample_sizes)
+ 
+    res = matrix(NA, 6*s, 9)
    
-      x <- s*6
+    x <- s*6
       
-      ind <- 1
-  # 
+    ind <- 1
+
+    #-----------------------------------------------------------------------  
+      
     for (j in 1:s) {
    
-    for(i in 1:6) {
+        for(i in 1:6) {
    
-           res[ind,1] <- i     # group 
-           res[ind,2] <- sample_sizes[j]  # total sample size
-    n1 <-  res[ind,3] <- sample_sizes[j]/((eval(parse(text = paste0("R",(i)))))+1)  # n1
-    n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/
-                        (eval(parse(text = paste0("R",(i))))+1) # n2
-    r <-   res[ind,5] <-(eval(parse(text = paste0("R",(i)))))      # ratio
-    p1 <-  res[ind,6] <-(eval(parse(text = paste0("P",(i)))))      # p1
-    p2 <-  res[ind,7] <-(eval(parse(text = paste0("P",(i),"B"))))  # p2
-    a1 <-  res[ind,8] <-(eval(parse(text = paste0("A",(i)))))      # alpha
+                   res[ind,1] <- i     # group 
+                   res[ind,2] <- sample_sizes[j]  # total sample size
+            n1 <-  res[ind,3] <- sample_sizes[j]/((eval(parse(text = paste0("R",(i)))))+1)  # n1
+            n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/
+                                (eval(parse(text = paste0("R",(i))))+1)    # n2
+            r <-   res[ind,5] <-(eval(parse(text = paste0("R",(i)))))      # ratio
+            p1 <-  res[ind,6] <-(eval(parse(text = paste0("P",(i)))))      # p1
+            p2 <-  res[ind,7] <-(eval(parse(text = paste0("P",(i),"B"))))  # p2
+            a1 <-  res[ind,8] <-(eval(parse(text = paste0("A",(i)))))      # alpha
     
-    # do the calculation
-     res[ind,9]  <- bpower(n1 = n1, 
-                           n2 =n2, p1 = p1, p2 =  p2, alpha = a1)
-      
-      
+                  # do the calculation, feed in 
+                   res[ind,9]  <- bpower(n1 = n1, 
+                                         n2 =n2, p1 = p1, p2 =  p2, alpha = a1)
       
    ind=ind+1
-  }
+   
     }
+  }
       
+  #-----------------------------------------------------------------------    
       res<- data.frame(res)
       names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")
       res <- plyr::arrange(res,Index ,N)
       res$n1 <- round(res$n1,2)
-       res$n2 <- round(res$n2,2)
- res$power <- round(res$power,4)
-#-------------------------------------------------------
-   
-  
-    
-#   power_values_1 <- bpower(n1 = sample_sizes/(R1+1), 
-#                            n2 = R1* sample_sizes/(R1+1), p1 = P1, p2 =  P1B, alpha = A1)
-#   
-#   power_values_2 <- bpower(n1 = sample_sizes/(R2+1), 
-#                            n2 = R2* sample_sizes/(1+R2), p1 = P2, p2 =  P2B, alpha = A2)
-#   
-#   power_values_3 <- bpower(n1 = sample_sizes/(R3+1), 
-#                            n2 = R3* sample_sizes/(1+R3), p1 = P3, p2 =  P3B, alpha = A3)
-#   
-#   power_values_4 <- bpower(n1 = sample_sizes/(R4+1), 
-#                            n2 = R4* sample_sizes/(1+R4), p1 = P4, p2 =  P4B, alpha = A4)
-#   
-#   power_values_5 <- bpower(n1 = sample_sizes/(R5+1), 
-#                            n2 = R5* sample_sizes/(1+R5), p1 = P5, p2 =  P5B, alpha = A5)
-#   
-#   power_values_6 <- bpower(n1 = sample_sizes/(R6+1), 
-#                            n2 = R6* sample_sizes/(1+R6), p1 = P6, p2 =  P6B, alpha = A6)
-#  
-#  
-#  
-# #https://stackoverflow.com/questions/56646451/how-to-create-variable-names-in-a-function-with-paste?noredirect=1&lq=1
-#  
-#   # put together
-#  
-# power_df <- data.frame(sample_size = sample_sizes, 
-#                          setNames(list(power_values_1), paste("x_1"  ,P1,P1B, A1, R1,sep="_")),
-#                          setNames(list(power_values_2), paste("x_2"  ,P2,P2B, A2, R2,sep="_")),
-#                          setNames(list(power_values_3), paste("x_3"  ,P3,P3B, A3, R3,sep="_")),
-#                          setNames(list(power_values_4), paste("x_4"  ,P4,P4B, A4, R4,sep="_")),
-#                          setNames(list(power_values_5), paste("x_5"  ,P5,P5B, A5, R5,sep="_")),
-#                          setNames(list(power_values_6), paste("x_6"  ,P6,P6B, A6, R6,sep="_"))
-# )
-# 
-#   
-# 
-# x <- reshape2::melt(power_df, id.vars="sample_size")
-
-# exrract info for labels
-# xx <- stringr::str_split(x$variable, "_")
-# 
-#  # https://stackoverflow.com/questions/41336606/accessing-element-of-a-split-string
-# 
-# x$A <- sapply( xx, "[", 3 )
-# x$B <- sapply( xx, "[", 4 )
-# x$C <- sapply( xx, "[", 5 ) 
-# x$D <- sapply( xx, "[", 6 ) 
-
-x <- res
-
-x$phrase <- with(x, paste("p1=",x$P1,"p2=",x$P2,"\nalpha=",x$alpha, "ratio=",x$ratio))
-
-x$r <- ifelse(x$ratio !=1,"Unequal","Equal")  # new
+      res$n2 <- round(res$n2,2)
+      res$power <- round(res$power,4)
+  #-------------------------------------------------------
  
-# x$A <- x$B <- x$C <- x$s <- x$D <- NULL
-
-x$variable <- rep(1:6, each=length(sample_sizes)) 
-
- x$variable <- x$Index
-    
-  x$variable <- factor(x$variable)
-  
- # library(dplyr)
-  
- # x$tag <-   as.character(x$phrase)
+  # code to help with legend
  
-  x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
- 
+      x <- res
     
+      x$phrase <- with(x, paste("p1=",x$P1,"p2=",x$P2,"\nalpha=",x$alpha, "ratio=",x$ratio))
+    
+      x$r <- ifelse(x$ratio !=1,"Unequal","Equal")  
+    
+      x$variable <- rep(1:6, each=length(sample_sizes)) 
+    
+      x$variable <- x$Index
+        
+      x$variable <- factor(x$variable)
+    
+      x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
+
+  #-----------------------------------------------------------------------
     return(list(  
       
       x=x , res=res
+      
      ))    
-
-
 
 })
 
@@ -319,6 +257,7 @@ renderPlot({
   
   p =      xx()$x
   
+  #-----------------------------------------------------------------------
   skips <- ifelse(input$x_range[2] <= 1000, 50,
                 ifelse(input$x_range[2] > 1000 & input$x_range[2] < 3000 ,200
                        ,  500))
@@ -327,29 +266,21 @@ renderPlot({
   legendlabels <- data.frame(
                     'stadtland'= unique(p$tag),
                     stringsAsFactors=FALSE)
-  
+
+  #-----------------------------------------------------------------------
   
   all <-ggplot(p, aes(x = N, y = power, linetype=r,
-                    #group = interaction(ratio, variable),
                     group=variable,
                     colour = variable)) +
   geom_line() +
     
     scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
                         values = c("red", "green", "blue", "purple","black","orange")) +
-                                
- 
- # scale_linetype_manual(values=c("solid",   "dashed")) +
-  
-  
-  #  geom_vline(xintercept = seq(0, 700, by = 50),  col = "gray", linetype = "solid",  linewidth = .25) +
-  #   geom_hline(yintercept = seq(0, 1, by = 0.1), col = "gray", linetype = "solid",  linewidth = .25) +
-  
+
   scale_y_continuous(breaks = seq(input$y_range[1], input$y_range[2], by = 0.1),  
                      limits = c(input$y_range[1], input$y_range[2])) +
   scale_x_continuous(breaks = seq(input$x_range[1],input$x_range[2],skips), limits = c(input$x_range[1],input$x_range[2])) +
   theme_bw() +
-  #  theme(legend.position="none") +
   theme( 
     plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
      
@@ -384,7 +315,7 @@ renderPlot({
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 
 print(all)
-  
+  #-----------------------------------------------------------------------
 #ggplotly(all)
  })
  
@@ -394,83 +325,311 @@ print(all)
 
 ```{r listing}
 
- 
- 
-  # renderPrint({
-  # 
-  #   w <-  xx()$x
-  #   w$tag <- NULL
-  #   rownames(w) <- NULL  # refresh row names
-  #   print(w)
-  #   
-  # 
-  # })
-  # 
-  # 
-
 
 
 ``` 
 
 ```{r listing2}
 
- 
-
-  # renderPrint({
-  # 
-  #   w1 <-  xx()$res
-  #   rownames(w1) <- NULL  # refresh row names
-  #   print(w1)
-  # 
-  # 
-  # })
-
-
 
  DT::renderDataTable({
-    
- #   require(gtools)
-    
+
     w1 <-  xx()$res
-    
-      
     
     DT::datatable(w1, rownames=FALSE,
                   plugins = 'natural',
-                #  colnames=c('Patient ID' = 'id', 'Total AEs per patient' = 'tot.AE', 'Count of AEs per patient'='count.AE',
-                 #            'Treatment'='treatment','Duplicate SOC?'= 'duplicate.soc.flag',
-                  #           'Duplicate PT?'='duplicate.pt.flag'),
                   options = list(
-                    # dom = 't',
                     columnDefs = list(list(type = 'natural', targets = c(4,5)))
                   ))
 })
   
  
+``` 
+
+
+Survival
+====
+```{r, survival}
+
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
+
+```{r surv1}
+
+  
+          splitLayout(
+          textInput("alphas", div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
+          value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
+                                       )
+  
+          splitLayout(
+          textInput("hrs",    div(h5(tags$span(style="color:blue", "hazard ratio"))),    
+          value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
+           
+          splitLayout(
+          textInput("sidess",    div(h5(tags$span(style="color:blue", "one or two sided"))),    
+          value= "2,2,2,2,2,1"),)
+                                         
+          splitLayout(
+          textInput("ros",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
+          value= "1,2,3,1,2,3"),)                                
+                                        
+          sliderInput('x_ranges', 'Plot x-range', value = c(0,400),
+                  min = 0, max = 5000,step=100,ticks=F)
+          
+          sliderInput('y_ranges', 'Plot y-range', value = c(0,1),
+                  min = 0, max = 1,step=.05,ticks=F)
+
+   
+          br()
+          
+                
+s1 <- reactive({
+  
+    A <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
+    
+    A1 <- A[1]
+    A2 <- A[2]
+    A3 <- A[3]
+    A4 <- A[4]
+    A5 <- A[5]
+    A6 <- A[6]
+  
+    Az<-   (as.numeric(unlist(strsplit(input$hrs,","))))    
+    
+    P1 <- Az[1]
+    P2 <- Az[2]
+    P3 <- Az[3]
+    P4 <- Az[4]
+    P5 <- Az[5]
+    P6 <- Az[6] 
+
+    Aa<-   (as.numeric(unlist(strsplit(input$sidess,","))))    
+    
+    P1B <- Aa[1]
+    P2B <- Aa[2]
+    P3B <- Aa[3]
+    P4B <- Aa[4]
+    P5B <- Aa[5]
+    P6B <- Aa[6] 
+
+
+    Ab<-   (as.numeric(unlist(strsplit(input$ros,","))))    
+    
+    R1 <- Ab[1]
+    R2 <- Ab[2]
+    R3 <- Ab[3]
+    R4 <- Ab[4]
+    R5 <- Ab[5]
+    R6 <- Ab[6] 
+               
+#     ## Function to calculate n1 and n2 based on k and S
+# calculate_n1_n2 <- function(k, S) {
+#     n2 <- S / (k + 1)
+#     n1 <- k * n2
+#     return(c(n1 = n1, n2 = n2))
+# }
+# 
+# # Example usage with k = 3 and S = 200
+# k <- 1
+# S <- 200
+# 
+#  A1 <- A2 <- A3 <- A4 <- A5 <- A6 <- .05
+# 
+# P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- .5
+# 
+# P1B <- P2B <- P3B <- P4B <- P5B <- P6B <- 2
+# 
+# R1 <- R2 <- R3 <- R4 <- R5 <- R6 <- 1
+# 
+#  sample_sizes <- seq(10, 100, by = 10)
+  # 
+    
+   sample_sizes <- seq(10, input$x_ranges[2], by = 10)
+   
+   P1<-ifelse(P1<1, 1/P1, P1)
+    
+A <- gsDesign::nEvents(hr = P1, n = sample_sizes, tbl = TRUE , alpha=A1, sided =P1B, ratio=R1)
+B <- gsDesign::nEvents(hr = P2, n =sample_sizes, tbl = TRUE , alpha=A2, sided =P2B, ratio=R2)
+ 
+C <- gsDesign::nEvents(hr = P3, n =sample_sizes, tbl = TRUE , alpha=A3, sided =P3B, ratio =R3)
+D <- gsDesign::nEvents(hr = P4, n =sample_sizes, tbl = TRUE , alpha=A4, sided =P4B, ratio =R4)
+ 
+E <- gsDesign::nEvents(hr = P5, n =sample_sizes, tbl = TRUE , alpha=A5, sided =P5B, ratio =R5)
+F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =P6B,  ratio =R6)
+     
+   
+   
+  # 
+  #---------------------------------------------------------------
+  
+  x <- rbind(A,B,C,D, E, F)
+ 
+  #-----------------------------------------------------------------------    
+
+  
+  x$n2 <- x$n / (x$ratio + 1)
+  x$n1 <- x$ratio * x$n2
+  
+  x$hr <- factor(x$hr)
+ res <- x
+      res<- data.frame(res)
+      #names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")
+      #res <- plyr::arrange(res,Index ,N)
+      res$n1 <- round(res$n1,2)
+      res$n2 <- round(res$n2,2)
+      res$Power <- round(res$Power,4)
+  # #-------------------------------------------------------
+  # 
+  # code to help with legend
+
+      x <- res
+
+      x$phrase <- with(x, paste("HR=",x$hr, "\nalpha=",x$alpha, "ratio=",x$ratio))
+
+      x$ratio <- ifelse(x$ratio !=1,"Unequal","Equal")
+
+      x$variable <- rep(1:6, each=length(sample_sizes))
+
+     # x$variable <- x$Index
+
+      x$variable <- factor(x$variable)
+
+      x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
+
+       x$ratio <- factor(x$ratio)
+  #-----------------------------------------------------------------------
+    return(list(  
+      
+      xy=x 
+      
+     ))    
+
+})
+
+```
+$\alpha$ type I assertion error $\beta$ not required
+
+
+ 
+
+<!-- Column {data-width=600, height=600} -->
+<!-- ----------------------------------------------------------------------- -->
+<!-- ### Chart 1 -->
+
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart 2
+
+```{r surv plot1, eval=TRUE}
+
+
+renderPlot({
+  
+ p =      s1()$xy
+  
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_ranges[2] <= 1000, 50,
+           ifelse(input$x_ranges[2] > 1000 & input$x_ranges[2] < 3000 ,200
+                       ,  500))
+
+  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
+  legendlabels <- data.frame(
+                    'stadtland'= unique(p$tag),
+                    stringsAsFactors=FALSE)
+
+  #-----------------------------------------------------------------------
+  #p$ratio <- factor(p$ratio)
+  
+  all <-ggplot(p, aes(x = n, y = Power, 
+                    linetype=ratio,
+                      group = interaction(ratio, hr),
+                    colour = hr)) +
+  geom_line() +
+
+    scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
+                        values = c("red", "green", "blue", "purple","black","orange")) +
+
+  scale_y_continuous(breaks = seq(input$y_ranges[1], input$y_ranges[2], by = 0.1),
+                       limits = c(input$y_ranges[1], input$y_ranges[2])) +
+  scale_x_continuous(breaks = seq(input$x_ranges[1], input$x_ranges[2],skips), limits =                                    c(input$x_ranges[1], input$x_ranges[2])) +
+  theme_bw() +
+  theme(
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
+    legend.position="right",
+   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+    legend.key.size = unit(1.3, "cm"),
+    legend.key = element_rect(color = NA, fill = NA),
+
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
+    axis.line.x = element_line(color="black"),
+    axis.line.y = element_line(color="black"),
+
+    plot.caption=element_text(hjust = 0, size = 12),
+    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
+
+    strip.background = element_rect(colour = "black", fill = "white"),
+    panel.background = element_rect(fill = 'white', colour = 'white'),
+    plot.background = element_rect(fill = 'white', colour = 'white')
+  ) +
+
+
+  #-----------------------------------------------------------------------
 
 
 
+  labs(y="Power", x = 'Total Number of events', color = "Hazard ratio", linetype="Ratio" )+
+  #labs(caption = "- Alpha the type I assertion probability = 0.05, (note total number of patients requires information on accrual and total follow up times) \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. \n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n- Ratio of experimental to control sample size where 'experimental' is the same as the group with hazard represented in the numerator of the hazard ratio  ") +
+  labs(caption = paste("- Alpha the type I assertion probability , (total number of patients requires information on accrual and total follow up times). Ratio 2 pertains to larger sample in experimental arm \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. Assuming exponential hazards.\n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n" )) +
+
+  ggtitle(paste0(" Power (or number of events) for hazard ratio assuming exponential hazards)") )
+
+
+#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+
+print(all)
+#-----------------------------------------------------------
+#ggplotly(all)
+ })
+ 
+```
+
+### Listing
+
+```{r listings}
 
 
 
+``` 
+
+```{r listings2}
 
 
+ DT::renderDataTable({
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    w1 <-  s1()$xy
+    
+    DT::datatable(w1, rownames=FALSE,
+                  plugins = 'natural',
+                  options = list(
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+})
+  
+ 
+``` 
 
 ``` 
 <!-- ### Chart 2 -->

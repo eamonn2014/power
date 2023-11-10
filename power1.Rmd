@@ -397,8 +397,9 @@ s1 <- reactive({
                       beta = 0.1, ratio = 1, sided = 1, hr0 = 1, n = 0 )
 {
    
-   # if (sided != 1 && sided != 2) 
+    if (sided != 1 && sided != 2) sided=NA
     #    stop("sided must be 1 or 2")
+             
   
         c <- sqrt(ratio)/(1 + ratio)
        

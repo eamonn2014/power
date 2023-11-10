@@ -368,11 +368,11 @@ Column {.sidebar}
   
           splitLayout(
           textInput("hrs",    div(h5(tags$span(style="color:blue", "hazard ratio"))),    
-          value= "2,1.5,0.9,0.8,0.51,0.3"),)
+          value= "2,1.5,0.9,2,1.5,0.9"),)
            
           splitLayout(
           textInput("sidess",    div(h5(tags$span(style="color:blue", "one or two sided"))),    
-          value= "2,2,2,2,2,1"),)
+          value= "2,2,2,1,1,1"),)
                                          
           splitLayout(
           textInput("ros",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
@@ -390,6 +390,50 @@ Column {.sidebar}
                 
 s1 <- reactive({
   
+# adapted from gsDesign::nEvents
+  
+
+           fsupower <- function (hr = NA, alpha = 0.025,
+                      beta = 0.1, ratio = 1, sided = 1, hr0 = 1, n = 0 )
+{
+   
+   # if (sided != 1 && sided != 2) 
+    #    stop("sided must be 1 or 2")
+  
+        c <- sqrt(ratio)/(1 + ratio)
+       
+        # new code so graph is shown if a hr is missing form the 6 hrs allowed
+        if(is.na(hr)| is.na(sided)) { 
+          hr=NA; pwr=NA; delta=0; se=0; sided=NA
+          
+        } else {
+        
+        
+        # my fix for the hr > 1 behaviour
+        if(hr>1) {
+        delta <- -c * -(log(hr) - log(hr0))
+        } else {
+        delta <- -c * (log(hr) - log(hr0))
+        }
+        
+
+        pwr <- stats::pnorm(-(stats::qnorm(1 - alpha/sided) - sqrt(n) * delta))
+        }
+     
+        
+            pwr <- data.frame(cbind(hr = hr, n = n, alpha = alpha, 
+                sided = sided, beta = 1 - pwr, Power = pwr, delta = delta, 
+                ratio = ratio, hr0 = hr0, se = sqrt(1/n)/c))
+        
+        return(pwr)
+ 
+}
+    # fsupower(hr = 10/3, n = c(10,20),   alpha=0.05, sided =2, ratio=1)
+    # fsupower(hr = .3, n = c(10,20),   alpha=0.05, sided =2, ratio=1)
+    # 
+    # gsDesign::nEvents(hr = .5, n = 50, tbl = TRUE , alpha=0.05, sided =1,  ratio =c(2,.5))
+    # gsDesign::nEvents(hr = 2, n = 50, tbl = TRUE , alpha=0.05, sided =1,  ratio =c(2,.5))
+    
     A <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
     
     A1 <- A[1]
@@ -427,116 +471,77 @@ s1 <- reactive({
     R5 <- Ab[5]
     R6 <- Ab[6] 
                
-#     ## Function to calculate n1 and n2 based on k and S
-# calculate_n1_n2 <- function(k, S) {
-#     n2 <- S / (k + 1)
-#     n1 <- k * n2
-#     return(c(n1 = n1, n2 = n2))
-# }
-# 
-# # Example usage with k = 3 and S = 200
-# k <- 1
-# S <- 200
-# 
-#  A1 <- A2 <- A3 <- A4 <- A5 <- A6 <- .05
-    
-  
-# 
-# P1=2;  P2=.7 ; P3 <- P4 <- P5 <- P6 <- .5
-# realHR <- c(P1,P2,P3,P4,P5,P6)
-# # 
-# P1B <- P2B <- P3B <- P4B <- P5B <- P6B <- 2
-# 
-# R1 <-1; R2=2; R3 <- R4 <- R5 <- R6 <- 1
-# # 
-# #  sample_sizes <- seq(10, 100, by = 10)
-
-    
-   sample_sizes <- seq(10, input$x_ranges[2], by = 10)
-   
-   # when hr > 1  gsDesign::nEvents odd results so I reciprocate in that case
-   
-#   for (i in 1:6) {
-     
-  # tmp <-  eval(parse(text = paste0("P",(i))))   
-   
-   # eval(parse(text = paste0("P",(i))))<-
-   #   ifelse(eval(parse(text = paste0("P",(i))))<1, 1/eval(parse(text = paste0("P",(i)))), eval(parse(text = paste0("P",(i)))))
-   
-    # paste0("P",(i)) <- tmp
-   
-#}
+  sample_sizes <- seq(10, input$x_ranges[2], by = 10)
    
  
-# P1 <- 0.5
-# P2 <- 1.2
-# P3 <- 0.8
-# P4 <- 2.5
-# P5 <- 0.7
-# P6 <- 1.0   
-#  
 # List of objects
-objects_list <- list(P1, P2, P3, P4, P5, P6)
-
-object_names <- c("P1", "P2", "P3", "P4", "P5", "P6")
-
-note <-  objects_list > 1
-
-# Function to replace the value with its reciprocal if less than 1
-replace_with_reciprocal <- function(x) {
-  if (x > 1) {
-    x <- 1 / x
-  }
-  return(x)
-} 
-
-for (object_name in object_names) {
-  assign(object_name, replace_with_reciprocal(get(object_name)))
-} 
+# objects_list <- list(P1, P2, P3, P4, P5, P6)
+# 
+# object_names <- c("P1", "P2", "P3", "P4", "P5", "P6")
+# 
+# note <-  objects_list > 1
+# 
+# # Function to replace the value with its reciprocal if less than 1
+# replace_with_reciprocal <- function(x) {
+#   if (x > 1) {
+#     x <- 1 / x
+#   }
+#   return(x)
+# } 
+# 
+# for (object_name in object_names) {
+#   assign(object_name, replace_with_reciprocal(get(object_name)))
+# } 
 
 
    
     # divide by 2 for totl
-A <- gsDesign::nEvents(hr = P1, n = sample_sizes, tbl = TRUE , alpha=A1, sided =P1B, ratio=R1)
-B <- gsDesign::nEvents(hr = P2, n =sample_sizes, tbl = TRUE , alpha=A2, sided =P2B, ratio=R2)
- 
-C <- gsDesign::nEvents(hr = P3, n =sample_sizes, tbl = TRUE , alpha=A3, sided =P3B, ratio =R3)
-D <- gsDesign::nEvents(hr = P4, n =sample_sizes, tbl = TRUE , alpha=A4, sided =P4B, ratio =R4)
- 
-E <- gsDesign::nEvents(hr = P5, n =sample_sizes, tbl = TRUE , alpha=A5, sided =P5B, ratio =R5)
-F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =P6B,  ratio =R6)
-     
-# gsDesign::nEvents(hr = 2, n = seq(10, 100, by = 10), hr0=2, tbl = TRUE , alpha=.05, sided =2,  ratio =1)
-     
-   
-  # 
+# A <- gsDesign::nEvents(hr = P1, n = sample_sizes, tbl = TRUE , alpha=A1, sided =P1B, ratio=R1)
+# 
+# 
+# B <- gsDesign::nEvents(hr = P2, n =sample_sizes, tbl = TRUE , alpha=A2, sided =P2B, ratio=R2)
+#  
+# C <- gsDesign::nEvents(hr = P3, n =sample_sizes, tbl = TRUE , alpha=A3, sided =P3B, ratio =R3)
+# D <- gsDesign::nEvents(hr = P4, n =sample_sizes, tbl = TRUE , alpha=A4, sided =P4B, ratio =R4)
+#  
+# E <- gsDesign::nEvents(hr = P5, n =sample_sizes, tbl = TRUE , alpha=A5, sided =P5B, ratio =R5)
+# F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =P6B,  ratio =R6)
+  
+# fsupower(hr = 10/3, n = c(10,20),   alpha=0.05, sided =2, ratio=1)
+
+A <- fsupower(hr = P1, n = sample_sizes,   alpha=A1, sided =P1B, ratio=R1)
+B <- fsupower(hr = P2, n =sample_sizes,    alpha=A2, sided =P2B, ratio=R2)
+C <- fsupower(hr = P3, n =sample_sizes,   alpha=A3, sided =P3B, ratio =R3)
+D <- fsupower(hr = P4, n =sample_sizes,   alpha=A4, sided =P4B, ratio =R4)
+E <- fsupower(hr = P5, n =sample_sizes,   alpha=A5, sided =P5B, ratio =R5)
+F <- fsupower(hr = P6, n = sample_sizes,  alpha=A6, sided =P6B,  ratio =R6)
+
+
+
+   # gsDesign::nEvents(hr = .5, n = 50, tbl = TRUE , alpha=0.05, sided =1,  ratio =c(2,.5))
+   #  
+   # gsDesign::nEvents(hr = .5, n = 50, tbl = TRUE , alpha=0.05, sided =1,  ratio =c(3,1/3))
+   # 
+   # cpower(tref, n, mc, r, accrual, tmin, noncomp.c=0, noncomp.i=0, 
+   #     alpha=0.05, nc, ni, pr=TRUE)
+   # 
   #---------------------------------------------------------------
   
   x <- rbind(A,B,C,D, E, F)
- 
-  
- 
-  #-----------------------------------------------------------------------    
-
   
   x$n2 <- x$n / (x$ratio + 1)
   x$n1 <- x$ratio * x$n2
   
-  # real HR goes back as we flipped those >1 and it would be confusing on legend
-  
- 
-  
-  x$hr <- rep(realHR, each=length(sample_sizes)) 
+  # real HR goes back as we flipped those >1 (gdesign function is weird) and it would be confusing on legend
+  # x$hr <- rep(realHR, each=length(sample_sizes)) 
   
   x$hr <- factor(x$hr)
   
   
   
   
- res <- x
+      res <- x
       res<- data.frame(res)
-      #names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")
-      #res <- plyr::arrange(res,Index ,N)
       res$n1 <- round(res$n1,2)
       res$n2 <- round(res$n2,2)
       res$Power <- round(res$Power,4)
@@ -546,8 +551,10 @@ F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =
 
       x <- res
 
-      x$phrase <- with(x, paste("HR=",x$hr, "\nalpha=",x$alpha, "ratio=",x$ratio))
+      x$phrase <- with(x, paste("HR=",x$hr, "ratio=",x$ratio, "\nalpha=",x$alpha, "sided=",x$sided) )
 
+      # x$actual_ratio <- x$ratio
+      
       x$ratio <- ifelse(x$ratio !=1,"Unequal","Equal")
 
       x$variable <- rep(1:6, each=length(sample_sizes))
@@ -570,12 +577,7 @@ F <- gsDesign::nEvents(hr = P6, n = sample_sizes, tbl = TRUE , alpha=A6, sided =
 
 ```
 $\alpha$ type I assertion error $\beta$ not required
-
-
  
-
-<!-- Column {data-width=600, height=600} -->
-<!-- ----------------------------------------------------------------------- -->
 <!-- ### Chart 1 -->
 
  
@@ -600,17 +602,23 @@ renderPlot({
                     'stadtland'= unique(p$tag),
                     stringsAsFactors=FALSE)
 
+   p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",   "ratio", 
+  "variable")]
   #-----------------------------------------------------------------------
-  #p$ratio <- factor(p$ratio)
-  
+ 
   all <-ggplot(p, aes(x = n, y = Power, 
                     linetype=ratio,
-                    #  group = interaction(ratio, hr),
-                    colour = hr)) +
+                    #group = interaction(ratio, hr),
+                    
+                    group=variable,
+                    colour = variable)) + # # had hr here initally mis match with legend
   geom_line() +
 
     scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
                         values = c("red", "green", "blue", "purple","black","orange")) +
+
+    # scale_color_manual( labels=unique(p$tag), # c("a","b","c","d","e","f"),
+    #                     values = c("red", "green", "blue", "purple","black","orange")) +
 
   scale_y_continuous(breaks = seq(input$y_ranges[1], input$y_ranges[2], by = 0.1),
                        limits = c(input$y_ranges[1], input$y_ranges[2])) +
@@ -647,8 +655,8 @@ renderPlot({
 
 
   labs(y="Power", x = 'Total Number of events', color = "Hazard ratio", linetype="Ratio" )+
-  #labs(caption = "- Alpha the type I assertion probability = 0.05, (note total number of patients requires information on accrual and total follow up times) \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. \n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n- Ratio of experimental to control sample size where 'experimental' is the same as the group with hazard represented in the numerator of the hazard ratio  ") +
-  labs(caption = paste("- Alpha the type I assertion probability , (total number of patients requires information on accrual and total follow up times). Ratio 2 pertains to larger sample in experimental arm \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. Assuming exponential hazards.\n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n" )) +
+ 
+  labs(caption = paste("- Alpha the type I assertion probability.  Note, total number of patients requires information on accrual duration and maximum follow up times. If ratio <1 n1 is the smaller group. \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. Assuming exponential hazards.\n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n" )) +
 
   ggtitle(paste0(" Power (or number of events) for hazard ratio assuming exponential hazards)") )
 
@@ -676,9 +684,10 @@ print(all)
 
  DT::renderDataTable({
 
-    w1 <-  s1()$xy
+    p <-  s1()$xy
     
-    DT::datatable(w1, rownames=FALSE,
+       p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
+    DT::datatable(p, rownames=FALSE,
                   plugins = 'natural',
                   options = list(
                     columnDefs = list(list(type = 'natural', targets = c(4,5)))
@@ -686,7 +695,6 @@ print(all)
 })
   
  
-``` 
 
 ``` 
 <!-- ### Chart 2 -->

@@ -654,46 +654,54 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 
 
+**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
+
 ```{r}
 
+
+#ylab = expression(paste("Diameter of aperture ( ", mu, " )"))
    splitLayout(
           textInput("alpham", 
-                    div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
+                     div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+                    
+                    
           value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
                                        )
   
           splitLayout(
           textInput("mu1",    
-                    div(h5(tags$span(style="color:blue", "mean 1"))),    
-          value= "2,1.5,0.9,2,1.5,0.9"),)
+                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter up to 6 pop. means"))),    
+          value= "1, 1.05, 1.1, 1.5, 2 , 2.5"),)
            
           splitLayout(
           textInput("sd1",    
-                    div(h5(tags$span(style="color:blue", "standard deviation 1"))),    
-          value= "2,2,2,1,1,1"),)
+                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter up to 6 pop.   SDs"))),    
+          value= "1, 1, .5, 1, 1, 1"),)
           
           
                  splitLayout(
           textInput("mu2",    
-                    div(h5(tags$span(style="color:blue", "mean 2"))),    
-          value= "2,1.5,0.9,2,1.5,0.9"),)
-           
-          splitLayout(
-          textInput("sidem",
-                    div(h5(tags$span(style="color:blue", "alternative"))),
-          value= "2,2,2,1,1,1"),)
-
-            splitLayout(
+                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter up to 6 pop. means"))),    
+          value= "2, 1.5, 1.2, 1, .5, 1"),)
+                 
+                        splitLayout(
           textInput("rsd",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal standard deviations"))),   
-          value= "1,2,3,1,2,3"),)                                
-                                        
+                    div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
+          value= "1, 1.5, 1.2, 2, 2, 3"),)                                
+                        
           
                                          
           splitLayout(
           textInput("rom",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
           value= "1,2,3,1,2,3"),)                                
+          
+             
+          splitLayout(
+          textInput("sidem",
+                    div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
+          value= "2,2,2,1,1,1"),)
+
                                         
           sliderInput('x_rangem', 'Plot x-range', value = c(0,400),
                   min = 0, max = 5000,step=100,ticks=F)
@@ -776,11 +784,11 @@ s2 <- reactive({
     rsd6 <- Ab[6] 
      #-----------------------------------------------------------------------
 
-    n= seq(3,400, 1)
+    n= seq(3,input$x_rangem[2], 2)
 
 
 
-res = matrix(NA, length(n), 9)
+res = matrix(NA, length(n), 10)
 
 sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1){
   
@@ -794,13 +802,13 @@ sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1){
     zz$n[2] <- ifelse(is.na(zz$n[2]), zz$n[1], zz$n[2])
    zz$sd[2] <- ifelse(is.na(zz$sd[2]), zz$sd[1], zz$sd[2])
     
-    res[i,] <- c( u0, u1 , round(zz$power,3), zz$n[1], zz$n[2],zz$sd[1], zz$sd[2], zz$sig.level, zz$alternative)
+    res[i,] <- c( u0, u1 , round(zz$power,3), zz$n[1], zz$n[2],zz$sd[1], zz$sd[2], zz$sig.level, zz$alternative, ratio)
     
   }
   
   
   res <- data.frame(res)
-  names(res) <- c( "mu1", "mu2","power" , "n1", "n2", "sd1", "sd2","alpha","sided")
+  names(res) <- c( "mu1", "mu2","power" , "n1", "n2", "sd1", "sd2","alpha","sided", "ratio")
   return(res)
   
   
@@ -837,9 +845,9 @@ res <- rbind(A, B , C, D, E, F)
 
       x <- res
   
-      x$phrase <- with(x, paste("mu1=",x$mu1, "sd1=",x$sd1, 
-                                "mu2=",x$mu2, "sd2=",x$sd2, 
-                                "\nalpha=",x$alpha, "sided=",x$sided) )
+      x$phrase <- with(x, paste0("mu1= ",mu1, " sd1= ",sd1, 
+                                " mu2= ",mu2, " sd2= ",sd2, 
+                                "\nalpha= ",alpha, " ",sided, ", ratio=",ratio) )
       
       x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
       
@@ -951,11 +959,11 @@ renderPlot({
 
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Number of events', color = "Hazard ratio", linetype="Ratio" )+
+  labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
   labs(caption = paste("- Alpha the type I assertion probability.   \n" )) +
 
-  ggtitle(paste0(" Power (or number of events) for two means)") )
+  ggtitle(paste0(" Power (or total sample size) for two means") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -986,7 +994,9 @@ print(all)
 
     p <-  s2()$xy
     
-    #   p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
+     # p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
+      
+      p$phrase <- p$tag <- NULL
     DT::datatable(p, rownames=FALSE,
                   plugins = 'natural',
                   options = list(

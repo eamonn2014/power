@@ -256,6 +256,9 @@ renderPlot({
   
   p =      xx()$x
   
+  
+ p <- p[complete.cases(p), ]
+  
   #-----------------------------------------------------------------------
   skips <- ifelse(input$x_range[2] <= 1000, 50,
                 ifelse(input$x_range[2] > 1000 & input$x_range[2] < 3000 ,200
@@ -531,6 +534,9 @@ $\alpha$ type I assertion error $\beta$ not required
 renderPlot({
   
  p =      s1()$xy
+ 
+ 
+ p <- p[complete.cases(p), ]
   
   #-----------------------------------------------------------------------
   skips <- ifelse(input$x_ranges[2] <= 1000, 50,
@@ -660,13 +666,7 @@ Column {.sidebar}
 
 
 #ylab = expression(paste("Diameter of aperture ( ", mu, " )"))
-   splitLayout(
-          textInput("alpham", 
-                     div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-                    
-                    
-          value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
-                                       )
+  
   
           splitLayout(
           textInput("mu1",    
@@ -684,6 +684,9 @@ Column {.sidebar}
                     div(h5(tags$span(style="color:blue", "\U1D77B 2, enter up to 6 pop. means"))),    
           value= "2, 1.5, 1.2, 1, .5, 1"),)
                  
+                 
+                 
+                 
                         splitLayout(
           textInput("rsd",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
@@ -694,13 +697,19 @@ Column {.sidebar}
           splitLayout(
           textInput("rom",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1,2,3,1,2,3"),)                                
+          value= "1, 2, 3, 1, 2, 3"),)                                
           
-             
+              splitLayout(
+          textInput("alpham", 
+                     div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+                    
+                    
+          value= ".05, .05, .05, .05, .05, .05"), 
+                                       )
           splitLayout(
           textInput("sidem",
                     div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
-          value= "2,2,2,1,1,1"),)
+          value= "2, 2, 2, 1, 1, 1"),)
 
                                         
           sliderInput('x_rangem', 'Plot x-range', value = c(0,400),
@@ -790,17 +799,37 @@ s2 <- reactive({
 
 res = matrix(NA, length(n), 10)
 
-sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1){
+sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1, sig.level){
   
   for (i in 1: length(n)) {
     
+    # trying to circumvent error when plot returns error if these are not there
+     
+    if (is.na(sdr) | is.na(alternative) | is.na(sig.level) |is.na(ratio)) 
+       
+       { 
+    zz <- MESS::power_t_test(n=99, sd=1, power=NULL, ratio=1, sd.ratio=1, delta=NA, alternative="one.sided",
+                             sig.level=0.05)
+    
+    
+    zz$n[2] <- ifelse(is.na(zz$n[2]),   zz$n[1], zz$n[2])
+   zz$sd[2] <- ifelse(is.na(zz$sd[2]), zz$sd[1], zz$sd[2])
+   
+        }  else {
+    #-------------------------------------------------------------------------------
+           
     side <- ifelse(alternative==1,"one.sided",
                    ifelse(alternative==2,"two.sided", NA))
     
-    zz <- MESS::power_t_test(n=n[i], sd=sd, power=NULL, ratio=ratio, sd.ratio=sdr, delta=u0-u1, alternative=side)
     
-    zz$n[2] <- ifelse(is.na(zz$n[2]), zz$n[1], zz$n[2])
+    zz <- MESS::power_t_test(n=n[i], sd=sd, power=NULL, ratio=ratio, sd.ratio=sdr, delta=u0-u1, alternative=side,
+                             sig.level=sig.level)
+    
+    
+    zz$n[2] <- ifelse(is.na(zz$n[2]),   zz$n[1], zz$n[2])
    zz$sd[2] <- ifelse(is.na(zz$sd[2]), zz$sd[1], zz$sd[2])
+   
+        }
     
     res[i,] <- c( u0, u1 , round(zz$power,3), zz$n[1], zz$n[2],zz$sd[1], zz$sd[2], zz$sig.level, zz$alternative, ratio)
     
@@ -827,12 +856,12 @@ sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1){
 #  
 #  sofamean2( u0=M1, u1=M1a, sd=sd1,   ratio=1, sdr=2)
 
-A <-  sofamean2(u0=M1, u1=M1a, sd=sd1,   ratio=R1, sdr=rsd1, alternative=s1)
-B <-  sofamean2(u0=M2, u1=M2a, sd=sd2,   ratio=R2, sdr=rsd2, alternative=s2)
-C <-  sofamean2(u0=M3, u1=M3a, sd=sd3,   ratio=R3, sdr=rsd3, alternative=s3)
-D <-  sofamean2(u0=M4, u1=M4a, sd=sd4,   ratio=R4, sdr=rsd4, alternative=s4)
-E <-  sofamean2(u0=M5, u1=M5a, sd=sd5,   ratio=R5, sdr=rsd5, alternative=s5)
-F <-  sofamean2(u0=M6, u1=M6a, sd=sd6,   ratio=R6, sdr=rsd6, alternative=s6)
+A <-  sofamean2(u0=M1, u1=M1a, sd=sd1,   ratio=R1, sdr=rsd1, alternative=s1, sig.level =A1 )
+B <-  sofamean2(u0=M2, u1=M2a, sd=sd2,   ratio=R2, sdr=rsd2, alternative=s2, sig.level =A2 )
+C <-  sofamean2(u0=M3, u1=M3a, sd=sd3,   ratio=R3, sdr=rsd3, alternative=s3, sig.level =A3 )
+D <-  sofamean2(u0=M4, u1=M4a, sd=sd4,   ratio=R4, sdr=rsd4, alternative=s4, sig.level =A4 )
+E <-  sofamean2(u0=M5, u1=M5a, sd=sd5,   ratio=R5, sdr=rsd5, alternative=s5, sig.level =A5 )
+F <-  sofamean2(u0=M6, u1=M6a, sd=sd6,   ratio=R6, sdr=rsd6, alternative=s6, sig.level =A6 )
 
 
 
@@ -850,6 +879,8 @@ res <- rbind(A, B , C, D, E, F)
                                 "\nalpha= ",alpha, " ",sided, ", ratio=",ratio) )
       
       x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
+      
+       
       
       x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,
                              as.numeric(as.character(x$n2)), na.rm=TRUE))
@@ -899,6 +930,8 @@ renderPlot({
   
  p =      s2()$xy
   
+ p <- p[complete.cases(p), ]
+ 
   #-----------------------------------------------------------------------
   skips <- ifelse(input$x_rangem[2] <= 1000, 50,
            ifelse(input$x_rangem[2] > 1000 & input$x_rangem[2] < 3000 ,200
@@ -1003,18 +1036,6 @@ print(all)
                     columnDefs = list(list(type = 'natural', targets = c(4,5)))
                   ))
 })
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     

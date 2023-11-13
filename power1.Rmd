@@ -76,16 +76,16 @@ Column {.sidebar}
 
   
           splitLayout(
-          textInput("alpha", div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
+          textInput("alpha", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
           value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
                                        )
   
           splitLayout(
-          textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion p1"))),    
+          textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion \U1D7B9 1"))),    
           value= "0.2,0.2,0.2,0.2,0.2,0.2"),)
            
           splitLayout(
-          textInput("p2",    div(h5(tags$span(style="color:blue", "hypothesised proportion p2"))),    
+          textInput("p2",    div(h5(tags$span(style="color:blue", "hypothesised proportion \U1D7B9 1"))),    
           value= "0.1,0.1,0.1,0.25,0.3,0.4"),)
                                          
           splitLayout(
@@ -141,27 +141,7 @@ xx <- reactive({
     R5 <- Ab[5]
     R6 <- Ab[6] 
                
-#     ## Function to calculate n1 and n2 based on k and S
-# calculate_n1_n2 <- function(k, S) {
-#     n2 <- S / (k + 1)
-#     n1 <- k * n2
-#     return(c(n1 = n1, n2 = n2))
-# }
-# 
-# # Example usage with k = 3 and S = 200
-# k <- 1
-# S <- 200
-# 
-# A1 <- A2 <- A3 <- A4 <- A5 <- A6 <- .05
-# #
-#  P1 =2; P2=.7 ; P3 <- P4 <- P5 <- P6 <- .2
-# #
-#  P1B <- P2B <- P3B <- P4B <- P5B <- P6B <- .4
-# #
-#  R1 <- R2 <- R3 <- R4 <- R5 <- R6 <- 1
-# 
-#  sample_sizes <- seq(10, 100, by = 10)
-  # 
+  
     
    sample_sizes <- seq(10, input$x_range[2], by = 10)
   # 
@@ -212,7 +192,7 @@ xx <- reactive({
  
       x <- res
     
-      x$phrase <- with(x, paste("p1=",x$P1,"p2=",x$P2,"\nalpha=",x$alpha, "ratio=",x$ratio))
+      x$phrase <- with(x, paste(": \U1D7B9 1=",x$P1,", \U1D7B9 2=",x$P2,"\n\U1D7AA=",x$alpha, ", ratio=",x$ratio))
     
       x$r <- ifelse(x$ratio !=1,"Unequal","Equal")  
     
@@ -310,7 +290,7 @@ renderPlot({
   
   
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio" )+
-  labs(caption = paste("- Ratio, see legend, >1 pertains to when p1 is the larger sample size and <1 when p1 is the smaller sample size.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
+  labs(caption = paste("- Ratio, see legend,less than 1, n2 is the smaller group.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
   ggtitle(paste0("Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -365,7 +345,7 @@ Column {.sidebar}
   
           splitLayout(
           textInput("alphas", 
-                    div(h5(tags$span(style="color:blue", "alpha (type I error)"))), 
+                    div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
           value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
                                        )
   
@@ -402,14 +382,15 @@ s1 <- reactive({
                       beta = 0.1, ratio = 1, sided = 1, hr0 = 1, n = 0 )
 {
    
-       if (sided != 1 && sided != 2) sided=NA
+      # if (sided != 1 && sided != 2) {sided=NA}
              
         c <- sqrt(ratio)/(1 + ratio)
        
         # new code so graph is shown if a hr is missing from the 6 entries allowed
-        if(is.na(hr)| is.na(sided)) { 
+        if(is.na(hr) | is.na(sided)) { 
           
-          hr=NA; pwr=NA; delta=0; se=0; sided=NA
+          hr=NA; pwr=NA; delta=0; se=0; sided=NA; alpha=NA; hr0=NA; ratio=NA
+           
           
         } else {
         
@@ -498,7 +479,7 @@ s1 <- reactive({
 
       x <- res
 
-      x$phrase <- with(x, paste("HR=",x$hr, "ratio=",x$ratio, "\nalpha=",x$alpha, "sided=",x$sided) )
+      x$phrase <- with(x, paste(": HR=",x$hr, "ratio=",x$ratio, "\n\U1D7AA=",x$alpha, "sided=",x$sided) )
       
       x$ratio <- ifelse(x$ratio !=1,"Unequal","Equal")
 
@@ -562,9 +543,7 @@ renderPlot({
 
     scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
                         values = c("red", "green", "blue", "purple","black","orange")) +
-
-    # scale_color_manual( labels=unique(p$tag), # c("a","b","c","d","e","f"),
-    #                     values = c("red", "green", "blue", "purple","black","orange")) +
+ 
 
   scale_y_continuous(breaks = seq(input$y_ranges[1], input$y_ranges[2], by = 0.1),
                        limits = c(input$y_ranges[1], input$y_ranges[2])) +
@@ -598,11 +577,11 @@ renderPlot({
 
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Number of events', color = "Hazard ratio", linetype="Ratio" )+
+  labs(y="Power", x = 'Total number of events', color = "Hazard ratio", linetype="Ratio" )+
  
   labs(caption = paste("- Alpha the type I assertion probability.  Note, total number of patients requires information on accrual duration and maximum follow up times. If ratio <1 n1 is the smaller group. \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. Assuming exponential hazards.\n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n" )) +
 
-  ggtitle(paste0(" Power (or number of events) for hazard ratio assuming exponential hazards)") )
+  ggtitle(paste0(" Power (or number of events) for hazard ratio assuming exponential hazards") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -803,11 +782,13 @@ sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1, sig.level){
   
   for (i in 1: length(n)) {
     
-    # trying to circumvent error when plot returns error if these are not there
+    # trying to circumvent error on power_t_test if these inputs  are not there
+    # rows with NA are dropped later
      
     if (is.na(sdr) | is.na(alternative) | is.na(sig.level) |is.na(ratio)) 
        
-       { 
+       {
+      # delta set to NA  
     zz <- MESS::power_t_test(n=99, sd=1, power=NULL, ratio=1, sd.ratio=1, delta=NA, alternative="one.sided",
                              sig.level=0.05)
     
@@ -873,10 +854,18 @@ res <- rbind(A, B , C, D, E, F)
 # mean(rep(0 : 24, 100000 * pmod(px, or=c(OR))))
 
       x <- res
-  
-      x$phrase <- with(x, paste0("mu1= ",mu1, " sd1= ",sd1, 
-                                " mu2= ",mu2, " sd2= ",sd2, 
-                                "\nalpha= ",alpha, " ",sided, ", ratio=",ratio) )
+      # 
+      # x$phrase <- with(x, paste0("\U1D741 1= ",mu1, ", \U1D7BC 1= ",sd1, 
+      #                           "\n\U1D741 2= ",mu2, ", \U1D7BC 2= ",sd2, 
+      #                           "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio) )
+      
+txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sd1,")", 
+                                  " & ~\U1D728( ",mu2,", ",sd2,")", 
+                                "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio))
+
+         #x$phrase <- substring(txt, 2)
+      
+      x$phrase <- txt
       
       x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
       
@@ -893,7 +882,7 @@ res <- rbind(A, B , C, D, E, F)
       x$variable <- factor(x$variable)
 
       x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-
+      
       x$ratio <- factor(x$ratio)
 
       x$n <- as.numeric(as.character(x$n))
@@ -938,11 +927,15 @@ renderPlot({
                        ,  500))
 
   #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
+ 
+  # p$tag <- substring( p$tag, 2)
+ 
   legendlabels <- data.frame(
                     'stadtland'= unique(p$tag),
                     stringsAsFactors=FALSE)
 
-   p <- p[,c( "n",  "n2", "n1" , "mu1", "sd1", "mu2", "sd2","alpha","sided",   "power",   "ratio", 
+   p <- p[,c( "n",  "n2", "n1" , "mu1", "sd1", "mu2", "sd2",
+              "alpha","sided",   "power",   "ratio", 
   "variable")]
   #-----------------------------------------------------------------------
  
@@ -994,7 +987,7 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability.   \n" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group" )) +
 
   ggtitle(paste0(" Power (or total sample size) for two means") )
 

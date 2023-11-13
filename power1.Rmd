@@ -16,16 +16,11 @@ Binary endpoint
 
   rm(list=ls())
   set.seed(6453)
-    # for neg binomial analysis and correlated data generation
   library(ggplot2)
-  
-   
- # library(gridExtra)
   library(tidyverse)
   library(plotly)
   library(Hmisc)
- # lwd.=3             # used when plotting
-  
+   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # function to format decimals
   # https://stackoverflow.com/questions/3245862/format-numbers-to-significant-figures-nicely-in-r
@@ -291,7 +286,7 @@ renderPlot({
   
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio" )+
   labs(caption = paste("- Ratio, see legend,less than 1, n2 is the smaller group.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
-  ggtitle(paste0("Power (or sample size) for difference in two proportions for evaluation of treatment effect.") ) 
+  ggtitle(paste0("Power (or sample size) for difference in two proportions") ) 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
@@ -306,14 +301,7 @@ print(all)
 ### Listing
 
 ```{r listing}
-
-
-
-``` 
-
-```{r listing2}
-
-
+ 
  DT::renderDataTable({
 
     w1 <-  xx()$res
@@ -382,7 +370,7 @@ s1 <- reactive({
                       beta = 0.1, ratio = 1, sided = 1, hr0 = 1, n = 0 )
 {
    
-      # if (sided != 1 && sided != 2) {sided=NA}
+      # if (sided != 1 && sided != 2) {sided=NA} # using this springs an error and crashes plot
              
         c <- sqrt(ratio)/(1 + ratio)
        
@@ -394,6 +382,7 @@ s1 <- reactive({
           
         } else {
         
+          if (sided != 1 && sided != 2) {sided=NA}
           # my fix for the hr > 1 behavior
           
           if(hr>1) {
@@ -596,11 +585,6 @@ print(all)
 
 ### Listing
 
-```{r listings}
-
-
-
-``` 
 
 ```{r listings2}
 
@@ -620,14 +604,6 @@ print(all)
  
 
 ``` 
-<!-- ### Chart 2 -->
-
-<!-- ```{r, tab1 plot2} -->
-
-
-<!-- ```   -->
-
-
 
 Continuous
 ====
@@ -643,9 +619,7 @@ Column {.sidebar}
 
 ```{r}
 
-
-#ylab = expression(paste("Diameter of aperture ( ", mu, " )"))
-  
+ 
   
           splitLayout(
           textInput("mu1",    
@@ -664,15 +638,12 @@ Column {.sidebar}
           value= "2, 1.5, 1.2, 1, .5, 1"),)
                  
                  
-                 
-                 
                         splitLayout(
           textInput("rsd",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
           value= "1, 1.5, 1.2, 2, 2, 3"),)                                
                         
           
-                                         
           splitLayout(
           textInput("rom",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
@@ -704,9 +675,7 @@ Column {.sidebar}
 s2 <- reactive({
   
 # function adapted from gsDesign::nEvents--------------------------------------------------------------------------
- 
-    #----------------------------------------------------------------------------------------------
-    
+  
     A <-   (as.numeric(unlist(strsplit(input$alpham,","))))    
     
     A1 <- A[1]
@@ -824,18 +793,6 @@ sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1, sig.level){
   
 }
 
-# 
-# zz = MESS::power_t_test(n=100, sd=1.5, power=NULL, ratio=2, sd.ratio=2, delta=1)
-#   MESS::power_t_test(n=100, sd=1.3, power=NULL, ratio=1, sd.ratio=1, delta=1)
-# 
-#  M1=M2=M3=M4=M5=M6=1;
-#  M1a=M2a=M3a=M4a=M5a=M6a=2 
-#  sd1=sd2=sd3=sd4=sd5=sd6=1   
-#  R1=R2=R3=2
-#   R4=R5=R6=1
-#  rsd1=rsd2=rsd3=rsd4=rsd5=r;sd6=1
-#  
-#  sofamean2( u0=M1, u1=M1a, sd=sd1,   ratio=1, sdr=2)
 
 A <-  sofamean2(u0=M1, u1=M1a, sd=sd1,   ratio=R1, sdr=rsd1, alternative=s1, sig.level =A1 )
 B <-  sofamean2(u0=M2, u1=M2a, sd=sd2,   ratio=R2, sdr=rsd2, alternative=s2, sig.level =A2 )
@@ -850,33 +807,23 @@ res <- rbind(A, B , C, D, E, F)
 
 
 #----------------------------------------------------------------------------------
-
-# mean(rep(0 : 24, 100000 * pmod(px, or=c(OR))))
-
+ 
       x <- res
-      # 
-      # x$phrase <- with(x, paste0("\U1D741 1= ",mu1, ", \U1D7BC 1= ",sd1, 
-      #                           "\n\U1D741 2= ",mu2, ", \U1D7BC 2= ",sd2, 
-      #                           "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio) )
-      
+     
 txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sd1,")", 
                                   " & ~\U1D728( ",mu2,", ",sd2,")", 
                                 "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio))
-
-         #x$phrase <- substring(txt, 2)
+ 
       
       x$phrase <- txt
       
       x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
-      
-       
       
       x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,
                              as.numeric(as.character(x$n2)), na.rm=TRUE))
       x$n <-  (as.numeric(as.character(x$n1)) +
                              as.numeric(as.character(x$n2)) )
       
-
       x$variable <- rep(1:6, each=length(n))
 
       x$variable <- factor(x$variable)
@@ -904,9 +851,6 @@ txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sd1,")",
 
 ```
 $\alpha$ type I assertion error $\beta$ not required
- 
-<!-- ### Chart 1 -->
-
  
 ## Column {.tabset .tabset-fade}
 
@@ -1000,12 +944,6 @@ print(all)
 #ggplotly(all)
  })
  
-
-
-
-
-
-
  
 ```
 
@@ -1038,57 +976,10 @@ References
 ====
 ```{r, refs}
  
-    tags$a(href = "https://stats.stackexchange.com/questions/71194/fitting-a-poisson-distribution-with-lme4-and-nlme", target="_blank",
-           tags$span(style="color:blue", "[1] Poisson with lme4 and nlme"),) 
     div(p(" "))
-    tags$a(href = "https://stats.stackexchange.com/questions/27869/fitting-a-poisson-glm-mixed-model-with-a-random-slope-and-intercept",target="_blank",
-           tags$span(style="color:blue", "[2] Mixed model Poisson"),)
-    div(p(" "))
-    tags$a(href = "https://stackoverflow.com/questions/6044800/adding-greek-character-to-axis-title", target="_blank",
-           tags$span(style="color:blue", "[3] Adding Greek characters - shiny"),)
-    div(p(" "))
-    tags$a(href = "https://stackoverflow.com/questions/52225348/shiny-flexdashboard-reference-object-in-new-tabset#52225733", target="_blank",
-           tags$span(style="color:blue", "[4] Reference object in new tab - shiny"),)  
-    div(p(" "))
-    tags$a(href = "https://journals.sagepub.com/doi/pdf/10.1177/1536867X1201200202", target="_blank",
-           tags$span(style="color:blue", "[5] What hypotheses do “nonparametric” two-group tests actually test?"),) 
-    div(p(" "))
-    tags$a(href = "https://www.google.co.uk/books/edition/Discrete_Data_Analysis_with_R/danODwAAQBAJ?hl=en",target="_blank",
-           tags$span(style="color:blue", "[6] Discrete Data Analysis with R Visualization and Modeling Techniques for Categorical and Count Data"),) 
-    div(p(" "))
-    tags$a(href = "https://www.galitshmueli.com/system/files/ASMB_901_rev.pdf",target="_blank",
-           tags$span(style="color:blue", "[7] On generating multivariate Poisson data in management science applications"),) 
-    div(p(" "))
-    tags$a(href = "https://thomasward.com/simulating-correlated-data/",target="_blank",
-           tags$span(style="color:blue", "[8] Simulating correlated data"),) 
-    div(p(" "))
-    tags$a(href = "https://www.rdocumentation.org/packages/simstudy/versions/0.3.0", target="_blank", 
-           tags$span(style="color:blue", "[9] package simstudy for simulating correlated data, not used but interesting"),) 
-    div(p(" "))
-    tags$a(href = "https://www.rdocumentation.org/packages/SimCorrMix/versions/0.1.1/topics/SimCorrMix",target="_blank", 
-           tags$span(style="color:blue", "[10] package SimCorrMix for simulating correlated data, not used but interesting"),) 
-    div(p(" "))
-    tags$a(href = "https://www.amazon.com/Negative-Binomial-Regression-Joseph-Hilbe/dp/0521198151",target="_blank", 
-           tags$span(style="color:blue", "[11] Negative Binomial Regression 2nd Edition by Joseph M. Hilbe"),) 
-    div(p(" "))
-    tags$a(href = "https://www.amazon.co.uk/Discrete-Data-Analysis-Visualization-Categorical/dp/149872583X",target="_blank", 
-           tags$span(style="color:blue", "[12] Discrete Data Analysis with R: Visualization and Modeling Techniques for Categorical and Count Data, Michael Friendly, David Meyer"),) 
-    div(p(" "))
-    tags$a(href = "https://bmcmedresmethodol.biomedcentral.com/track/pdf/10.1186/s12874-015-0023-0.pdf",target="_blank",
-           tags$span(style="color:blue", "[13] Sample size calculations for skewed distributions - see canned power tab"),) 
-    div(p(" "))
-      tags$a(href = "https://pubmed.ncbi.nlm.nih.gov/17230434/", target="_blank",
-           tags$span(style="color:blue", "[14] Analysis of exacerbation rates in asthma and chronic obstructive pulmonary disease: example from the TRISTAN study - see canned power tab "),) 
-    div(p(" "))
-    tags$a(href = "https://stats.stackexchange.com/questions/10419/what-is-theta-in-a-negative-binomial-regression-fitted-with-r", target="_blank",
-           tags$span(style="color:blue", "[15] J Hilbe explains what is reported by R's negative binomial model output "),) 
-    div(p(" "))
-     tags$a(href = "https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.5947", target="_blank",
-           tags$span(style="color:blue", "[16] H. Zhu and H. Lakkis (2014). Sample size calculation for comparing two negative binomial rates, Statistics in Medicine, 33:376-387"),) 
-     div(p(" "))
-     tags$a(href = "https://www.ejobrien.com/", target="_blank",
+    tags$a(href = "https://www.ejobrien.com/", target="_blank",
            tags$span(style="color:blue", "[17] Sixty percent of the time it works every time <- more apps here!"),) 
     div(p(" "))
-  tags$hr()                        
+    tags$hr()                        
 
 ```

@@ -410,7 +410,7 @@ all <-ggplot(x, aes(x = n, y = power, linetype=ratio,
   # labs(y="Power", x = 'Total Sample Size', color = "Population probabilities") +  
   
   labs(y="Power", x = 'Total sample size', color = "Total sample size", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability = 0.05 two sided. Ratio 2:1 pertains to larger sample in experimental arm\n- SD and mean informed from, SOFA baseline distribution Fig 1a JAMA 10 Oct 2001 Vol 286,14 'Serial Evaluation of the SOFA Score...'\n- The SOFA score is an ordinal score from 0-24. Power/sample size is based on ttest and assuming normal distributed means due to central limit theorem.\n" )) +  
+  labs(caption = paste("- Alpha the type I assertion probability = 0.05, two sided. Ratio 2:1 pertains to larger sample in experimental arm\n- SD and mean informed from, SOFA baseline distribution Fig 1a JAMA 10 Oct 2001 Vol 286,14 'Serial Evaluation of the SOFA Score...'\n- The SOFA score is an ordinal score from 0-24. Power/sample size is based on ttest and assuming normal distributed means due to central limit theorem.\n" )) +  
   
   # labs(caption = c(as.character(Sys.Date()),
   #                  "My caption")) + 

@@ -83,17 +83,15 @@ ration <- 1/3
 #https://stats.stackexchange.com/questions/354556/what-is-the-standard-error-for-hypothesis-testing-of-two-proportions-using-a-z-t
 #https://stats.stackexchange.com/questions/258522/how-to-calculate-the-power-of-a-test-that-compares-two-proportions
  
-p1 = 0.25
-p2 = 0.15 
+p1 = runif(1, .5,.9) 
+p2 = runif(1, .5,.9)   
 
-ration=2
-n=800
-r <- ration/(ration+1) 
-n1 <- round(n*(1-r)*1)        # n1 smaller group eg 33 associated with p1
-n2 <- round(n*(r)*1) # 
- 
- # ptest = prop.test( c(x1,x2),  c(n1,n2), correct=FALSE, alternative="less")
- 
+ration=1
+n=100  # total sample size
+r <- ration 
+n1 <- round(n / (r + 1))
+n2 <- round(r * n1)
+  
 
 
 n.reject = 0
@@ -103,26 +101,54 @@ for(k in 1:n.rep)
   x1 = sum(runif(n1)<p1)
   x2 = sum(runif(n2)<p2)
   ptest = prop.test( c(x1,x2), c(n1,n2), correct=FALSE)
-  if(  ptest$p.value < 0.05 ) n.reject = n.reject + 1
+  if(  ptest$p.value <= 0.05 ) n.reject = n.reject + 1
 }
 n.reject/n.rep  #power
+
+Hmisc::bpower(p1=p1, p2=p2, n1=n1, n2=n2, alpha=0.05)
+pwr::pwr.2p.test(pwr::ES.h(p1, p2), n = n/2)
+
+
+
  
 
 #------------------- nice ....
-  Z1 <- p2-p1
+  Z1 <- abs(p2-p1)
   
   Z2 <- ( p1*n1 + p2*n2 )  / (n1+n2)  # weight by sample size
   
   Z3<- sqrt( Z2*(1-Z2)*( 1/n1 + 1/n2) )
   
-  Z <- Z1/Z3
+   Z <- Z1/Z3
   
-  ZB <-  qnorm(0.025) + Z
+   ZB <-  qnorm(0.025) + Z
   
-  ZR <- -qnorm(0.025) + Z
+   ZL <- -qnorm(0.025) + Z
   
-  pnorm(ZB) + 1-pnorm(ZR)  #power
+  pnorm(ZB) + 1-pnorm(ZL)  #power
 #-----------------------
+   
+ 
+  L <- pnorm(qnorm(.025), Z, 1)
+  R <- 1-pnorm(qnorm(.975), Z, 1)
+  L + R
+  
+#-----------------------
+  
+  Hmisc::bpower(p1=p1, p2=p2, n1=n1, n2=n2, alpha=0.05)
+  
+  
+  #https://cran.r-project.org/web/packages/pwr/vignettes/pwr-vignette.html
+  
+  library(pwr)
+  p.out <- pwr.2p.test(h = ES.h(p1 = p1, p2 = p2),
+                       sig.level = 0.05,
+                       power = 0.80 ,
+                       alternative="two.sided")
+  p.out
+  plot(p.out)
+  
+  
 
 #----------------------------------------------------------------------- 
   # start of bendix approach
@@ -216,7 +242,7 @@ n.reject/n.rep  #power
      for (pp1 in 1: length(p1))  
       for (pp2 in 1: length(p2))  
         for (r in 1: length(ration))  
-       pwpr[i,pp1,pp2,r,] <- simp(  n=n[i], p1=p1[pp1], p2=p2[pp2],  ration=ration[r] , n.rep=10 )
+       pwpr[i,pp1,pp2,r,] <- simp(  n=n[i], p1=p1[pp1], p2=p2[pp2],  ration=ration[r] , n.rep=199 )
 
 )
    
@@ -428,25 +454,25 @@ require(survival)
  
 # n<-400
 
-sim = function(h,h2,n) {
-  
-  # Simulate some time to event data
-  T1 <- 1/h* (-log(runif(n)))^(1)   
-  T2 <- 1/h2*(-log(runif(n)))^(1) 
-  
-  # data
-  ti = c(T1, T2)
-  gr = c(rep(1, n), rep(0, n))
-  
-  l = coxph(Surv(ti) ~ gr)    # Fit Cox model
-  anova(l)$`Pr(>|Chi|)`[2]   # P-value 
-}
+#sim = function(h,h2,n) {
+#   
+#   # Simulate some time to event data
+#   T1 <- 1/h* (-log(runif(n)))^(1)   
+#   T2 <- 1/h2*(-log(runif(n)))^(1) 
+#   
+#   # data
+#   ti = c(T1, T2)
+#   gr = c(rep(1, n), rep(0, n))
+#   
+#   l = coxph(Surv(ti) ~ gr)    # Fit Cox model
+#   anova(l)$`Pr(>|Chi|)`[2]   # P-value 
+# }
 
 # unequal size
-sim1 = function(h,h2,n) {
+sim1 = function(h,h2,n, r) {
   
-  n1 <- round(n*ration*1)        # n1 smaller group eg 33 associated with p1
-  n2 <- round(n*((1-ration)*1))  # n2 larger  group eg 66 associated with p2
+  n1 <- round(n / (r + 1))
+  n2 <- round(r * n1)
   
   # Simulate some time to event data
   T1 <- 1/h* (-log(runif(n1)))^(1)   
@@ -460,11 +486,14 @@ sim1 = function(h,h2,n) {
   anova(l)$`Pr(>|Chi|)`[2]   # P-value 
 }
 
+# total sample size
+pv <-  replicate(1999, sim1(n= 100 , h =0.0866434, h2=0.1237763, r=1) )  #placebo trt, 
+  mean(pv <= 0.05)  
 
 
 # pop parameters--------------------------------
 
-sims=20
+sims=2000
 
 n <- seq(10, 400, by = 10)  #sample sizes
  
@@ -480,20 +509,20 @@ hr <- p1/p2 # hazard ratios
 
 
 
-res = matrix(NA, length(n), length(p1))  # store results
-
-
-for (k in 1: length(p1)) {   # explore all hypotheses
-  
-  for (i in 1:length (n)) {  # explore all sample sizes
-  
-    #execute my function
-    pv <-  replicate(sims, sim(n = n[i]*.5, h = p1[k], h2=p2[k]) )  #placebo trt,  note the 0.5
-    res[i,k] <-  mean(pv <= 0.05)  
-    
-  }
-  
-}
+# res = matrix(NA, length(n), length(p1))  # store results
+# 
+# 
+# for (k in 1: length(p1)) {   # explore all hypotheses
+#   
+#   for (i in 1:length (n)) {  # explore all sample sizes
+#   
+#     #execute my function
+#     pv <-  replicate(sims, sim(n = n[i]*.5, h = p1[k], h2=p2[k]) )  #placebo trt,  note the 0.5
+#     res[i,k] <-  mean(pv <= 0.05)  
+#     
+#   }
+#   
+# }
 
 
 res1 = matrix(NA, length(n), length(p1))
@@ -504,7 +533,7 @@ for (k in 1: length(p1)) {
   for (i in 1:length (n)) {
     
     #execute my function
-    pv <-  replicate(sims, sim1(n= n[i] , h = p1[k], h2=p2[k]) )  #placebo trt, 
+    pv <-  replicate(sims, sim1(n= n[i] , h = p1[k], h2=p2[k] , r=1) )  #placebo trt, 
     res1[i,k] <-  mean(pv <= 0.05)  
     
   }
@@ -515,20 +544,20 @@ for (k in 1: length(p1)) {
 res1 <- data.frame(res1)
 res1 <- cbind(n,res1)
 
-res  <- data.frame(res)
-res  <- cbind(n,res )
+# res  <- data.frame(res)
+# res  <- cbind(n,res )
 
-names(res) <-  c("n", paste0("HR=",eval(p1[1]/p2[1])), paste0("HR=",eval(p1[2]/p2[2])))
+#names(res) <-  c("n", paste0("HR=",eval(p1[1]/p2[1])), paste0("HR=",eval(p1[2]/p2[2])))
 names(res1) <- c("n", paste0("HR=",eval(p1[1]/p2[1])), paste0("HR=",eval(p1[2]/p2[2]))) # unequal
 
-x <-  reshape2::melt(res,  id.vars="n")
+#x <-  reshape2::melt(res,  id.vars="n")
 x1 <- reshape2::melt(res1, id.vars="n")
 
-x$ratio  <- "1:1"
-x1$ratio <- "1:2"
+#x$ratio  <- "1:1"
+x1$ratio <- "1:1"
 
 
-x <- rbind(x,x1)
+x <-  x1 
 
 names(x) <- c("n","hr","Power", "ratio")
  

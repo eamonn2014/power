@@ -117,7 +117,7 @@ pwr::pwr.2p.test(pwr::ES.h(p1, p2), n = N/2)  #what is the power?
 #------ parameters ------
 n<- 600   # total sample size
 N <- 1000# simulations
-alpha=0.1
+alpha=0.05
 # hypothesised AE rates, so high is bad
 
 p1 <- .2

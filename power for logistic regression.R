@@ -115,7 +115,10 @@ pwr::pwr.2p.test(pwr::ES.h(p1, p2), n = N/2)  #what is the power?
 
 
 #------ parameters ------
-n<- 600
+n<- 600   # total sample size
+N <- 1000# simulations
+alpha=0.1
+# hypothesised AE rates, so high is bad
 
 p1 <- .2
 p2 <- .1
@@ -134,9 +137,9 @@ betaC <- log(or3)
  
 
 #------ initialisation ------
-beta0Hat <- rep(NA, n)
-betaBHat <- rep(NA, n)
-betaCHat <- rep(NA, n)
+beta0Hat <- rep(NA, N)
+betaBHat <- rep(NA, N)
+betaCHat <- rep(NA, N)
 
 #If we are interested in rejecting the null
 power.vec1 <- power.vec2 <- power.vec3 <- c()
@@ -149,7 +152,7 @@ R2.vec = c()
 #----------------------------
 
 
- for(i in 1:n)
+ for(i in 1:N)
    {
        #data generation
       x <- sample(x=c("A","B", "C" ), 
@@ -158,10 +161,12 @@ R2.vec = c()
       linpred <- cbind(1, dummy(x)) %*% c(beta0, betaB, betaC)  #(b)
       
         pi <- exp(linpred) / (1 + exp(linpred))  #(c)
+        
        y <- rbinom(n=n, size=1, prob=pi)  #(d)
       
          #fit the logistic model
           x <- factor(x)
+          
           mod <- glm(y ~ x, family="binomial" )
         
           #save the estimates
@@ -173,12 +178,13 @@ R2.vec = c()
            
            pv1 <- sm$coefficients[2,4]
            pv2 <- sm$coefficients[3,4]
+           
            power.vec1 = c(power.vec1, pv1<alpha)
            power.vec2 = c(power.vec2, pv2<alpha)
            power.vec3 = c(power.vec3, pv1<alpha && pv2<alpha)
            
-           bias.vec1 = c(bias.vec1, betaB-sm$coefficients[2,1])
-           bias.vec2 = c(bias.vec2, betaC-sm$coefficients[3,1])
+           bias.vec1 = c(bias.vec1, betaB-mod$coef[2]) #sm$coefficients[2,1])
+           bias.vec2 = c(bias.vec2, betaC-mod$coef[3])
            R2.vec = c(R2.vec, 1-(sm$deviance/sm$null.deviance))
            
           
@@ -187,9 +193,9 @@ R2.vec = c()
 
  #------ results ------
 #The power (here rejecting the null for beta 1 depends on the number of individuals)
-sum(power.vec1)/n
-sum(power.vec2)/n
-sum(power.vec3)/n
+sum(power.vec1)/N
+sum(power.vec2)/N
+sum(power.vec3)/N
 
 #The bias is reducing when increasing the number of individuals
 mean(abs(bias.vec1))

@@ -104,3 +104,125 @@ Hmisc::bpower(p1=p1, p2=p2, n1=N/2, n2=N/2, alpha=0.05)
 pwr::pwr.2p.test(pwr::ES.h(p1, p2), n = N/2)  #what is the power?
 
 
+## ad another covariate
+
+
+
+#================================================================================================================
+
+#Assuming these values for the log odds ratio
+ 
+
+
+#------ parameters ------
+n<- 600
+
+p1 <- .2
+p2 <- .1
+p3 <- .1
+
+p1odd <- p1/(1-p1)
+p2odd <- p2/(1-p2)
+p3odd <- p3/(1-p3)
+or2 <- p2odd/p1odd
+or3 <- p3odd/p1odd
+
+
+beta0 <- log(p1odd) 
+betaB <- log(or2)
+betaC <- log(or3)
+ 
+
+#------ initialisation ------
+beta0Hat <- rep(NA, n)
+betaBHat <- rep(NA, n)
+betaCHat <- rep(NA, n)
+
+#If we are interested in rejecting the null
+power.vec1 <- power.vec2 <- power.vec3 <- c()
+
+#If we are interested in assessing parameter bias
+bias.vec1 <- bias.vec2 <- c()
+
+#If we are interested in computing Mac Fadden pseudo R2 
+R2.vec = c()
+#----------------------------
+
+
+ for(i in 1:n)
+   {
+       #data generation
+      x <- sample(x=c("A","B", "C" ), 
+                                size=n, replace=TRUE, prob=rep(1/3, 3))  #(a)
+      
+      linpred <- cbind(1, dummy(x)) %*% c(beta0, betaB, betaC)  #(b)
+      
+        pi <- exp(linpred) / (1 + exp(linpred))  #(c)
+       y <- rbinom(n=n, size=1, prob=pi)  #(d)
+      
+         #fit the logistic model
+          x <- factor(x)
+          mod <- glm(y ~ x, family="binomial" )
+        
+          #save the estimates
+           beta0Hat[i] <- mod$coef[1]
+           betaBHat[i] <- mod$coef[2]
+           betaCHat[i] <- mod$coef[3]
+           
+           sm = summary(mod)
+           
+           pv1 <- sm$coefficients[2,4]
+           pv2 <- sm$coefficients[3,4]
+           power.vec1 = c(power.vec1, pv1<alpha)
+           power.vec2 = c(power.vec2, pv2<alpha)
+           power.vec3 = c(power.vec3, pv1<alpha && pv2<alpha)
+           
+           bias.vec1 = c(bias.vec1, betaB-sm$coefficients[2,1])
+           bias.vec2 = c(bias.vec2, betaC-sm$coefficients[3,1])
+           R2.vec = c(R2.vec, 1-(sm$deviance/sm$null.deviance))
+           
+          
+         }
+ #-------------------------
+
+ #------ results ------
+#The power (here rejecting the null for beta 1 depends on the number of individuals)
+sum(power.vec1)/n
+sum(power.vec2)/n
+sum(power.vec3)/n
+
+#The bias is reducing when increasing the number of individuals
+mean(abs(bias.vec1))
+mean(abs(bias.vec2))
+
+#Mean pseudo R2
+mean(R2.vec)
+
+round(c(beta0e=mean(beta0Hat), 
+               betaBe=mean(betaBHat), 
+                   betaCe=mean(betaCHat)), 3)
+
+ #---------------------
+beta0
+betaB
+betaC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

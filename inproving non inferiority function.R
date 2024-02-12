@@ -231,6 +231,8 @@ nidx=function(u0,u1,  n,   alpha,  NId=0, nSims=100000, higher="higher better ou
   return (   power )
 }
 
+require(tidyverse) # for expand grid
+
 df_plot1 <- expand_grid(u0=0.3,
             u1=0.35,
             n=c(150,200,250),
@@ -249,8 +251,9 @@ df_plot1 <- expand_grid(u0=0.75,
                         delta=seq(0,0.1, by=0.02)) 
 
 
+df_plot1$pwr <- NA
   
-for(i in 1 : dim(df_plot)[1]) {
+for(i in 1 : dim(df_plot1)[1]) {
   
   df_plot1$pwr[i] <- 
     nidx (df_plot1$u0[i], 
@@ -272,6 +275,42 @@ ggplot(data=df_plot1, aes(x=delta, y=pwr, colour=factor(n  ))) +
        y= "Power", colour ="Sample size/group") +
   theme_bw() +
   theme(legend.position = "bottom")
+
+
+# another plot
+
+
+df_plot1 <- expand_grid(u0=0.75,
+                        u1=c(0.85, .9),
+                        n=c(seq(50,100, by= 10)),
+                        delta=seq(0, 0.1, by=0.05)) 
+
+
+df_plot1$pwr <- NA
+
+for(i in 1 : dim(df_plot1)[1]) {
+  
+  df_plot1$pwr[i] <- 
+    nidx (df_plot1$u0[i], 
+          df_plot1$u1[i],  
+          df_plot1$n[i],   
+          alpha=0.025,  
+          NId=df_plot1$delta[i], 
+          nSims=100000, higher="higher better outcomes")
+  
+  
+}
+
+
+library(ggplot2)
+
+ggplot(data=df_plot1, aes(x=n, y=pwr)) +
+  geom_line()+
+  labs(x=expression("Non-inferiority margin " * Delta),
+       y= "Power", colour ="Sample size/group") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  facet_wrap(~delta+u1)
 
 
 

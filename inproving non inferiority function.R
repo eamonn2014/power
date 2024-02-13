@@ -79,6 +79,33 @@ nid(u0=.3, u1=.3+.1,   # u0 is control u1 new treatment
      NId=0.10) 
 
 
+
+# checking to PASS
+n=904
+nid(u0=.3, u1=.35,   # u0 is control u1 new treatment
+    n=n , alpha=0.15, higher="lower better outcomes",
+    NId=0.1)  #  90%
+
+n=49
+nid(u0=.3, u1=.2,   # u0 is control u1 new treatment
+          n=n , alpha=0.15, higher="lower better outcomes",
+           NId=0.1)  #  90%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #https://search.r-project.org/CRAN/refmans/epiR/html/epi.ssninfb.html
 # duplicate some example at link above
 ## EXAMPLE 2:
@@ -306,11 +333,11 @@ library(ggplot2)
 
 ggplot(data=df_plot1, aes(x=n, y=pwr)) +
   geom_line()+
-  labs(x=expression("Non-inferiority margin " * Delta),
+  labs(x=expression("Sample size/group " ),
        y= "Power", colour ="Sample size/group") +
   theme_bw() +
   theme(legend.position = "bottom") +
-  facet_wrap(~delta+u1)
+  facet_wrap(~u1+delta)
 
 
 
@@ -326,7 +353,7 @@ s2 <- sqrt(u1*(1-u1))
 # 2 sided 0.05 we match
 mean(replicate(999, 
                t.test( rnorm( n,   u0,       s1  ) ,
-                       rnorm( n,   u1+.15,   s2) )$p.value<0.05  
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.05  
                
 ))
 

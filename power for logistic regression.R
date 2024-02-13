@@ -123,13 +123,18 @@ pwr::pwr.2p.test(pwr::ES.h(p1, p2), n = N/2)  #what is the power?
 
 #------ parameters ------
 n<- 3279   # total sample size
+n<-159*3
 N <- 1000  # simulations
-alpha=0.05/3  # 3 comparisons"s!
+alpha=0.05   # 3 comparisons"s!
 # hypothesised AE rates, so high is bad
 
 p1 <- .1
 p2 <- .15
 p3 <- .20
+
+p1 <- .4
+p2 <- .5
+p3 <- .6
 
 p1odd <- p1/(1-p1)
 p2odd <- p2/(1-p2)
@@ -191,7 +196,7 @@ R2.vec = c()
            
            power.vec1 = c(power.vec1, pv1<alpha)
            power.vec2 = c(power.vec2, pv2<alpha)
-           power.vec3 = c(power.vec3, pv1<alpha && pv2<alpha)
+           power.vec3 = c(power.vec3, pv1<alpha/2 && pv2<alpha/2)
            
            bias.vec1 = c(bias.vec1, betaB-mod$coef[2]) # 
            bias.vec2 = c(bias.vec2, betaC-mod$coef[3])
@@ -202,9 +207,9 @@ R2.vec = c()
            mod1 <- glm(y ~ x, family="binomial" )
            sm1 = summary(mod1)
            pv3 <- sm1$coefficients[3,4]  #BvC
-           power.vec4 = c(power.vec4, pv1<alpha && pv2<alpha && pv3<alpha)
+           power.vec4 = c(power.vec4, pv1<alpha/3 && pv2<alpha/3 && pv3<alpha/3) # bonferroni
             
-           
+          # power.vec4 = c(power.vec4, pv1<alpha/3 | pv2<alpha/3 | pv3<alpha/3)
           
          }
  #-------------------------

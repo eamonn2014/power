@@ -39,10 +39,39 @@ nid(u0=.85, u1=.90,   # u0 is control u1 new treatment
     n=n , alpha=0.025, 
     NId=0.10)  #  "0.83"
 
+
+# check
+
+n=83
+NId=0.10
+u1=.9
+u0=.85
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s1/s2, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.025)
+
+#------------------------------------------
+
 # check type I error
 nid(u0=.9, u1=.9+.1,  # u0 is control u1 new treatment
     n=n , alpha=0.025,
     NId=-0.10)  #  "0.025
+
+
+n=83
+NId=-0.10
+u1=.9
+u0=.9+.1
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s1, power=NULL, ratio=1, sd.ratio=1, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.025)
+
+#------------------------------------------ 
+
 
 n=1375
 nid(u0=.3, u1=.35,  higher="lower better outcomes",  # u0 is control u1 new treatment
@@ -50,10 +79,53 @@ nid(u0=.3, u1=.35,  higher="lower better outcomes",  # u0 is control u1 new trea
     NId=0.10)  #  "0.80
 
 
+NId=0.10
+u0=.30
+u1=.35
+u1=1-u1; u0=1-u0
+
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s2/s1,
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.025)
+
+
+# 2 sided 0.05 we match
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.05  
+               
+))
+
+#------------------------------------------
+
 n=13
 nid(u0=.7, u1=.90,   # u0 is control u1 new treatment
      n=n , alpha=0.15, higher="higher better outcomes",
      NId=0.15)  #  90%
+
+
+
+NId=0.15
+u1=.9
+u0=.7
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s1/s2, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.15)
+
+
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.3 
+               
+))
+
+#-----------------------------------------
 
 # checking to PASS
 n=223
@@ -62,21 +134,77 @@ nid(u0=.7, u1=.7,   # u0 is control u1 new treatment
      NId=0.1)  #  90%
 
 
+NId=0.1
+u1=.7
+u0=.7
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s1/s2, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.15)
+
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.3 
+               
+))
+
+#-----------------------------------------
+
 # fda 
 n=83
 nid(u0=.85, u1=.90,   # u0 is control u1 new treatment
      n=n , alpha=0.025, higher="higher better outcomes",
      NId=0.10)  #  "0.832869999998844"
 
+# check
+
+n=83
+NId=0.10
+u1=.9
+u0=.85
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s1/s2, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.025)
+
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.05 
+               
+))
+
+#-----------------------------------------
+
+n=2000 # anything here
 # check type I error
 nid(u0=.85, u1=.85-.1,   # u0 is control u1 new treatment
      n=n , alpha=0.025, higher="higher better outcomes",
      NId=0.10)  #  
 
+ 
+
+NId=-0.10
+u1=.85
+u0=.85+.1
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s1, power=NULL, ratio=1, sd.ratio=1, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.025)
+
+#-----------------------------------------
+
+
+
 # check type I error when lower is better
 nid(u0=.3, u1=.3+.1,   # u0 is control u1 new treatment
      n=n , alpha=0.025, higher="no",
      NId=0.10) 
+
+#---------------------------------------------------
 
 
 
@@ -86,24 +214,64 @@ nid(u0=.3, u1=.35,   # u0 is control u1 new treatment
     n=n , alpha=0.15, higher="lower better outcomes",
     NId=0.1)  #  90%
 
+ 
+
+NId=0.10
+u0=.30
+u1=.35
+u1=1-u1; u0=1-u0
+
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s2/s1,
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.15)
+
+
+# 2 sided 0.05 we match
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.3 
+               
+))
+
+
+
+
+#--------------------------------------------------
+
+
+
+
 n=49
 nid(u0=.3, u1=.2,   # u0 is control u1 new treatment
           n=n , alpha=0.15, higher="lower better outcomes",
            NId=0.1)  #  90%
 
 
+NId=0.10
+u0=.30
+u1=.2
+u1=1-u1; u0=1-u0
+
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+
+MESS::power_t_test(n=n, sd=s1, power=NULL, ratio=1, sd.ratio=s1/s2,
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.15)
 
 
+# 2 sided 0.05 we match
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.3 
+               
+))
 
-
-
-
-
-
-
-
-
-
+ 
+#--------------------------------------------------------------------
 
 
 #https://search.r-project.org/CRAN/refmans/epiR/html/epi.ssninfb.html
@@ -117,7 +285,7 @@ nid(u0=.3, u1=.2,   # u0 is control u1 new treatment
 ## Assuming a one-sided test size of 5% and a power of 30% how many 
 ## subjects should be included in the trial?
 
-n <- epi.ssninfb(treat = 0.4, control = 0.4, delta = 0.10, n = NA, power = 0.3, 
+n <- epiR::epi.ssninfb(treat = 0.4, control = 0.4, delta = 0.10, n = NA, power = 0.3, 
                  r = 1, nfractional = TRUE, alpha = 0.05)$n.total
 n
 
@@ -127,18 +295,57 @@ nid(u0=.4, u1=.4,   # u0 is control u1 new treatment
     NId=0.10)  
 
 
+
+NId=0.10
+u1=.4
+u0=.4
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s1, power=NULL, ratio=1, sd.ratio=1, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.05)
+
+
+# 2 sided 0.05 we match
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.1 
+               
+))
+
+
+
+#--------------------------------------------------------------------
+
+
+
 ## A total of 120 subjects need to be enrolled in the trial, 60 in the 
 ## treatment group and 60 in the control group.
 
 ## Re-run the function using n = 120 to confirm that power equals 0.30:
 
-epi.ssninfb(treat = 0.4, control = 0.4, delta = 0.10, n = 120, power = NA, 
+epiR::epi.ssninfb(treat = 0.4, control = 0.4, delta = 0.10, n = 120, power = NA, 
             r = 1, nfractional = TRUE, alpha = 0.05)$power
 
 ## With 120 subjects the estimated study power is 0.30.
 
+n=60
+NId=0.10
+u1=.4
+u0=.4
+s1 <- sqrt(u0*(1-u0))
+s2 <- sqrt(u1*(1-u1))
+MESS::power_t_test(n=n, sd=s1, power=NULL, ratio=1, sd.ratio=1, 
+                   delta=u1+NId-u0, alternative="one.sided",
+                   sig.level=0.05)
 
 
+# 2 sided 0.05 we match
+mean(replicate(999, 
+               t.test( rnorm( n,   u0,       s1  ) ,
+                       rnorm( n,   u1+NId,   s2) )$p.value<0.1 
+               
+))
 
 #------------------------------------------------
 
@@ -154,6 +361,9 @@ n=98
 nid(u0=.724, u1=.75, # u1 is better than above  so less patients needed
     n=n , alpha=0.025,
     NId=0.15)
+
+
+
 
 # this is my recommendation 90% power!!!!!!!!!!!!!!!!!!!!!!!!
 n=132
@@ -350,12 +560,25 @@ u0=.724
 s1 <- sqrt(u0*(1-u0))
 s2 <- sqrt(u1*(1-u1))
 
+nidx(u0=u0, u1=u1, higher="higher better outcomes",
+    n=n , alpha=0.025,
+    NId=0.15)
+
+
 # 2 sided 0.05 we match
 mean(replicate(999, 
                t.test( rnorm( n,   u0,       s1  ) ,
                        rnorm( n,   u1+NId,   s2) )$p.value<0.05  
                
 ))
+
+
+MESS::power_t_test(n=n, sd=s2, power=NULL, ratio=1, sd.ratio=s1/s2, 
+                         delta=u1+NId-u0, alternative="one.sided",
+                         sig.level=0.025)
+
+
+
 
 
 

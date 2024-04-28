@@ -582,24 +582,24 @@ Column {.sidebar}
           splitLayout(
           textInput("mu1",    
                     div(h5(tags$span(style="color:blue", "\U1D77B 1, enter up to 6 pop. means"))),    
-          value= "1, 1.05, 1.1, 1.5, 2 , 2.5"),)
+          value= "1, 1, 2, 2, 1 , 1"),)
            
           splitLayout(
           textInput("sd1",    
                     div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter up to 6 pop.   SDs"))),    
-          value= "1, 1, .5, 1, 1, 1"),)
+          value= "3, 3, 3, 3, 3, 3"),)
           
           
                  splitLayout(
           textInput("mu2",    
                     div(h5(tags$span(style="color:blue", "\U1D77B 2, enter up to 6 pop. means"))),    
-          value= "2, 1.5, 1.2, 1, .5, 1"),)
+          value= "2, 2, 1, 1, 3.1, 3"),)
                  
                  
                         splitLayout(
           textInput("rsd",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
-          value= "1, 1.5, 1.2, 2, 2, 3"),)                                
+          value= "1, 1, 1, 1, 1, 1"),)                                
                         
           
                                
@@ -610,19 +610,19 @@ Column {.sidebar}
                     
                     
                     
-          value= ".05, .05, .05, .05, .05, .05"), 
+          value= ".05, .025, .05, .025, .05, .025"), 
                                        )
               
               
                  splitLayout(
           textInput("sidem",
                     div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
-          value= "2, 2, 2, 1, 1, 1"),)
+          value= "2, 1, 2, 1, 2, 1"),)
               
                     splitLayout(
           textInput("rom",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1, 2, 3, 1, 2, 3"),)     
+          value= "1, 1, 1, 1, 1, 1"),)     
                     
        
 
@@ -881,9 +881,9 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided." )) +
 
-  ggtitle(paste0(" Power (or total sample size) for two means") )
+  ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends

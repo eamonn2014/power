@@ -1390,8 +1390,15 @@ References
  
     div(p(" "))
     tags$a(href = "https://www.ejobrien.com/", target="_blank",
-           tags$span(style="color:blue", "[17] Sixty percent of the time it works every time <- more apps here!"),) 
+           tags$span(style="color:blue", "[1] Sixty percent of the time it works every time <- more apps here!"),) 
     div(p(" "))
+      tags$a(href = "https://www.fharrell.com/post/pop/", target="_blank",
+           tags$span(style="color:blue", "[2] Proportional Odds Model Power Calculations for Ordinal and Mixed Ordinal/Continuous Outcomes"),) 
+    div(p(" "))
+    
+    
+    
+    
     tags$hr()                        
 
 ```

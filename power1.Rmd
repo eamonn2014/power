@@ -941,12 +941,12 @@ Column {.sidebar}
 
 ```{r tabn}
 splitLayout(
-          textInput("p1",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 1"))),    
-          value= "0.2, 0.3, 0.4, 0.1"),)
+          textInput("p1",    div(h5(tags$span(style="color:blue", "hyp. proportion(s) \U1D7B9 1..n"))),    
+          value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
            
                 splitLayout(
           textInput("or", div(h5(tags$span(style="color:blue", "odds ratio"))), 
-          value= "1,2"), 
+          value= "1.5,2"), 
                                        )
           
           splitLayout(
@@ -958,10 +958,10 @@ splitLayout(
           textInput("Q",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
           value= "0.5, 1"),)                                
                                         
-          sliderInput('x_rangen', 'Plot x-range', value = c(0,800),
+          sliderInput('x_rangepo', 'Plot x-range', value = c(0,800),
                   min = 0, max = 5000,step=100,ticks=F)
           
-          sliderInput('y_rangen', 'Plot y-range', value = c(0,1),
+          sliderInput('y_rangepo', 'Plot y-range', value = c(0,1),
                   min = 0, max = 1,step=.05,ticks=F)
 
    
@@ -976,7 +976,7 @@ splitLayout(
         or        <-   (as.numeric(unlist(strsplit(input$or,","))))   
     
  
-        n= seq(2,input$x_rangen[2], 2)
+        n= seq(2,input$x_rangepo[2], 2)
 
         d <- tidyr::expand_grid(or = or, alpha=A, frac =Q, n=n)
        
@@ -996,14 +996,14 @@ splitLayout(
          x <- result
       
          
-      txt <- with(x,paste0(": or=",or,", alpha ",alpha, ", ratio=",frac))
+      txt <- with(x,paste0("OR=",or,", alpha ",alpha, ", \nratio=",frac))
  
       
       x$phrase <- txt
       
       #x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
       
-      #x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,
+      #x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,\n
        #                      as.numeric(as.character(x$n2)), na.rm=TRUE))
       #x$n <-  (as.numeric(as.character(x$n1)) +
         #                     as.numeric(as.character(x$n2)) )
@@ -1025,7 +1025,7 @@ splitLayout(
  
     return(list(  
        
-       result=result
+       result=result, P=P, or=or
        
       ))    
  
@@ -1053,8 +1053,8 @@ renderPlot({
  p <- p[complete.cases(p), ]
  
   #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangem[2] <= 1000, 50,
-           ifelse(input$x_rangem[2] > 1000 & input$x_rangem[2] < 3000 ,200
+  skips <- ifelse(input$x_rangepo[2] <= 1000, 50,
+           ifelse(input$x_rangepo[2] > 1000 & input$x_rangepo[2] < 3000 ,200
                        ,  500))
 
   #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
@@ -1087,9 +1087,14 @@ renderPlot({
     # scale_color_manual( labels=unique(p$tag), # c("a","b","c","d","e","f"),
     #                     values = c("red", "green", "blue", "purple","black","orange")) +
 
-  scale_y_continuous(breaks = seq(input$y_rangem[1], input$y_rangem[2], by = 0.1),
-                       limits = c(input$y_rangem[1], input$y_rangem[2])) +
-  scale_x_continuous(breaks = seq(input$x_rangem[1], input$x_rangem[2],skips), limits =                                    c(input$x_rangem[1], input$x_rangem[2])) +
+  scale_y_continuous(breaks = 
+                       seq(input$y_rangepo[1], input$y_rangepo[2], by = 0.1),
+                       limits = c(input$y_rangepo[1], input$y_rangepo[2])) +
+    
+  scale_x_continuous(breaks =
+                       seq(input$x_rangepo[1], input$x_rangepo[2], skips), 
+                       limits = c(input$x_rangepo[1],  input$x_rangepo[2])) +
+    
   theme_bw() +
   theme(
     plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
@@ -1121,7 +1126,7 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Explicit non-inferioirity example (n is total sample size, CV is the shared sd : PowerTOST::power.noninf( alpha=0.025, n= 50, logscale=FALSE, theta0=0, margin =2, CV=3,design='parallel') #0.64 power" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model." )) +
 
   ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority) ") )
 
@@ -1136,46 +1141,134 @@ print(all)
  
   
   
-  
-  
-  
-#----------------------------------------------------------------------------------
-#  
-#       x <- res
-#      
-# txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sd1,")", 
-#                                   " & ~\U1D728( ",mu2,", ",sd2,")", 
-#                                 "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio))
-#  
-#       
-#       x$phrase <- txt
-#       
-#       x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
-#       
-#       x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,
-#                              as.numeric(as.character(x$n2)), na.rm=TRUE))
-#       x$n <-  (as.numeric(as.character(x$n1)) +
-#                              as.numeric(as.character(x$n2)) )
-#       
-#       x$variable <- rep(1:6, each=length(n))
-# 
-#       x$variable <- factor(x$variable)
-# 
-#       x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-#       
-#       x$ratio <- factor(x$ratio)
-# 
-#       x$n <- as.numeric(as.character(x$n))
-#       
-#       x$power <- as.numeric(as.character(x$power))
-#  
-#      
-#   #-----------------------------------------------------------------------
-
-
-
-
+ 
 ```
+
+### Listing
+
+ 
+
+```{r listings4}
+
+
+ DT::renderDataTable({
+
+    p <-  por()$result
+    
+     # p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
+      
+      p$phrase <- p$tag <- NULL
+    DT::datatable(p, rownames=FALSE,
+                  plugins = 'natural',
+                  options = list(
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+})
+
+```   
+ 
+
+### Predicted probabilities
+
+ 
+
+```{r alt4}
+
+
+ DT::renderDataTable({
+
+    
+    # selection of odds ratios
+    or <- por()$or
+    p <- por()$P
+ 
+    res2 = matrix(NA, nrow=length(or), ncol=length(p)  +1  )
+    
+    # cell probabilities 
+    for (i in 1:length(or)) {
+      
+     res2[i,] <- as.vector(c (or[i], Hmisc::pomodm(p=p, odds.ratio=or[i])))
+     
+    }
+
+ 
+    namez <- paste0("p", 1:length(p))
+    namez <- c("Odds ratio", namez)
+    res2 <- as.data.frame(res2)
+    names(res2) <- namez
+    
+ d1 <- DT::datatable(res2, rownames=FALSE,  
+                      
+                  plugins = 'natural',
+                  options = list(#autoWidth=TRUE,
+                                 pagelength=15,
+                                 lengtMenu=c(20),
+                                 dom="lfrtBip",
+                                 buttons=c('excel')
+                     
+                  ))
+  
+  d1<- DT::formatRound(d1, columns=namez  , digits=3)
+  
+  d1
+  
+  
+})  
+    
+
+```   
+ 
+
+### Predicted cum. probabilities
+
+ 
+
+```{r alt5}
+   DT::renderDataTable({
+
+    
+    # selection of odds ratios
+    or <- por()$or
+    p <- por()$P
+  
+   res2 = matrix(NA, nrow=length(or), ncol=length(p)  +1  )
+    
+    # cell probabilities 
+    for (i in 1:length(or)) {
+      
+    x <-  Hmisc::pomodm(p=p, odds.ratio=or[i])
+    res2[i,] <- (c(or[i],rev(cumsum(rev(x))[1: (length(p))])))
+     
+    }
+
+ 
+    namez <- paste0("y>=", 1:length(p))
+    namez <- c("Odds ratio", namez)
+    res2 <- as.data.frame(res2)
+    names(res2) <- namez
+    
+ d2 <- DT::datatable(res2, rownames=FALSE,  
+                      
+                  plugins = 'natural',
+                  options = list(#autoWidth=TRUE,
+                                 pagelength=15,
+                                 lengtMenu=c(20),
+                                 dom="lfrtBip",
+                                 buttons=c('excel')
+                     
+                  ))
+  
+  d2<- DT::formatRound(d2, columns=namez  , digits=3)
+  
+  d2
+  
+  
+  
+  
+})  
+     
+
+```   
 
  
           

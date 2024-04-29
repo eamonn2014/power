@@ -1158,17 +1158,28 @@ print(all)
      # p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
       
       p$phrase <- p$tag <- NULL
-    DT::datatable(p, rownames=FALSE,
+      
+       #p <- as.data.frame(p)
+       namez <- names(p)
+      
+  d1 <-  DT::datatable(p, rownames=FALSE,
                   plugins = 'natural',
                   options = list(
                     columnDefs = list(list(type = 'natural', targets = c(4,5)))
                   ))
+    
+  
+     
+  
+      d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+      d1
 })
 
 ```   
  
 
-### Predicted probabilities
+### Probabilities
 
  
 
@@ -1219,7 +1230,7 @@ print(all)
 ```   
  
 
-### Predicted cum. probabilities
+### Cum. probabilities
 
  
 
@@ -1267,6 +1278,107 @@ print(all)
   
 })  
      
+
+
+```   
+ 
+
+### Means and medians
+
+ 
+
+```{r alt6}
+   DT::renderDataTable({
+
+    
+    # selection of odds ratios
+    or <- por()$or
+    p <- por()$P
+  
+   res2 = matrix(NA, nrow=length(or), ncol=3 )
+    
+    # means and medians
+    for (i in 1:length(or)) {
+    
+    res2[i,] <- (c(or[i],     Hmisc::pomodm(1:length(p), p, odds.ratio=or[i])))
+     
+    }
+
+  
+    namez <- c("Odds ratio", "Mean","Median")
+    res2 <- as.data.frame(res2)
+    names(res2) <- namez
+    
+ d2 <- DT::datatable(res2, rownames=FALSE,  
+                      
+                  plugins = 'natural',
+                  options = list(#autoWidth=TRUE,
+                                 pagelength=15,
+                                 lengtMenu=c(20),
+                                 dom="lfrtBip",
+                                 buttons=c('excel')
+                     
+                  ))
+  
+  d2<- DT::formatRound(d2, columns=namez  , digits=3)
+  
+  d2
+  
+  
+  
+  
+})  
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+```   
+
+### means and medians v odds ratio
+
+```{r means}
+
+require(data.table)
+require(ggplot2)
+require(Hmisc)
+
+ k <- c(rep(0, 16), rep(1, 7), rep(2, 171), rep(3, 115), rep(4, 54))
+ kp <- (c(as.vector(table(k))) / sum(table(k)))
+
+
+renderPlot({
+  
+    #or  <- por()$or
+    
+    kp <- por()$P
+
+    kx <- 1:length(kp)
+ 
+    ors <- seq(0.2, 5, length=200)
+    
+    w <- pomodm(kx, kp, odds.ratio=1)
+    
+    z <- data.table(or=ors)
+    u <- z[, as.list(w - pomodm(kx, kp, odds.ratio=or)), by=or]
+    m <- meltData(or ~ mean + median, data=u)   # is in Hmisc
+    
+    ggplot(m, aes(x=or, y=value, color=variable)) + geom_line() +
+      geom_vline(xintercept=1, alpha=0.3) +
+      guides(color=guide_legend(title='')) +
+      xlab('Odds Ratio') + ylab('Difference Between Groups')
+
+
+})
 
 ```   
 

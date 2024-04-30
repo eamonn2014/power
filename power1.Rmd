@@ -1424,6 +1424,9 @@ Column {.sidebar}
           
           #--------------------------------------------------------------------------
           # input probabilities, total sample size, trt effect on log scale , and fraction for randomisation
+        
+          # for future eamonn, POsim is the tmpfun function below but written to accommodate
+          # varying number of categories.
        
           POsim <- function(P, n, beta_trt, Q) 
             
@@ -1482,10 +1485,10 @@ Column {.sidebar}
            # execute the function
            #--------------------------------------------------------------------------
            out <- replicate(ss, POsim(P =P, n=N, beta_trt=log(or), Q=Q ) )
-           pvalue <- mean( out <= sig.level )  #  
+           pvalue <- mean( out <= sig.level )  #  power
            #-------------------------------------------------------------------------
       
-           # 2 Now harrell's function, collect the pvalue
+           # 2 Now harrell's function, collect the power
            n2 <- round( N * Q )
            n1 <- N - n2 
            harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
@@ -1634,6 +1637,219 @@ br()
 
 
 
+``` 
+
+
+Three arm trial (continuous and binary)
+===
+
+```{r, threearm}
+
+
+ 
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter  **
+
+```{r threearm1}
+          
+          splitLayout(
+          textInput("mus",    div(h5(tags$span(style="color:blue", "hyp. proportions \U1D7B9 1...n"))),    
+          value= ".9,.8,.7"),)
+           
+          splitLayout(
+          textInput("sds", div(h5(tags$span(style="color:blue", "SD"))), 
+          value= "5.22,5.22,5.22"),  )
+          
+          splitLayout(
+          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"),  )
+          
+          splitLayout(
+          textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
+          value= "1"),)
+          
+          splitLayout(
+          textInput("ss",    div(h5(tags$span(style="color:blue", "simulations"))),   
+          value= "500"),)                                
+                             
+                
+          splitLayout(
+          textInput("N",    div(h5(tags$span(style="color:blue", "total sample size"))),   
+          value= "512"),)        
+          
+    
+          br()
+   
+          
+ threearm <- reactive({
+  
+        sig.level <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
+        mus         <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
+        link         <-   (as.numeric(unlist(strsplit(input$link    ,","))))    # fraction
+        sds        <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
+        ss        <-   (as.numeric(unlist(strsplit(input$ss    ,","))))
+        N         <-   (as.numeric(unlist(strsplit(input$N     ,","))))
+#------------------------------------------------------------------------------------------------------------  
+      
+        #    mus <- c(10,9,8)
+        # mus=c(.9,.8,.7)
+        #    link=1   # proportion
+        #   sds <- c(5.2,5.2,5.2)
+        # ss=1000
+        # sig.level =0.05
+        # N=100
+        
+        # from multiarm power simulations4.R
+        
+    three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var=1 )
+{
+  
+  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
+          
+  if (out.var %in% 1)    {    
+          
+  sigma0=sqrt(u0*(1-u0)) #placebo se
+  sigma1=sqrt(u1*(1-u1)) #arm1 se
+  sigma2=sqrt(u2*(1-u2)) #arm2 se
+    
+  } 
+  
+  for (i in 1:nSims) {
+    
+    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
+    y1=rnorm(1, u1, sigma1/sqrt(n))
+    y2=rnorm(1, u2, sigma2/sqrt(n))
+    
+    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
+    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
+    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
+    
+    t1=2*(1-pnorm(z1))  # 2 sided p-valu
+    t2=2*(1-pnorm(z2))
+    t3=2*(1-pnorm(z3))
+    
+    #power
+    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
+    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
+    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
+    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
+  }
+  
+  return (c( 
+    "power arm1 v placebo being signif. ",   formatz4(P1),
+    "power arm2 v placebo being signif. ",formatz4(P2),
+    "power for both arms v placebo being signif.", formatz4(P3) ,
+    "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
+    "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
+    "power for at least one arm signif. v placebo ", formatz4(P6) 
+  ))
+}
+
+##  
+        
+ x<-  three.arm(u0=mus[1], u1=mus[2], u2=mus[3], sigma0=sds[1], sigma1=sds[2], sigma2=sds[3], 
+             n=N, alpha=sig.level, out.var=link, nSims=ss)     
+        
+        
+#
+#  x <- three.arm(u0=.8, u1=.6, u2=.6, sigma0=5.22, sigma1=5.22, sigma2=5.22, n=170, alpha=.05, out.var=1, nSims=1000)
+  #       
+  # three.arm(u0=8, u1=6, u2=6, sigma0=5.22, sigma1=5.22, sigma2=5.22, n=170, alpha=.05, out.var=2, nSims=1000)  
+  #       
+  #       
+
+        
+     return(list(  
+       
+       AA =  paste0(x[1],x[2]),
+       BB =  paste0(x[3],x[4]),
+       
+       CC =  paste0(x[5],x[6]),
+       DD =  paste0(x[7],x[8]),
+       
+       EE =  paste0(x[9],x[10]),
+       FF =  paste0(x[11],x[12])
+       
+      ))    
+ 
+ })
+       
+ 
+ 
+```
+ 
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart 7
+
+```{r threearmo, eval=TRUE}
+ 
+ 
+h5(htmlOutput("intro2")) 
+br()
+ 
+
+#-------------------------------------------------------------------------------------------------------
+
+ output$intro2 <- renderText({  # create interactive text t1
+
+ 
+    print(paste0(
+      
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$AA,
+               
+               "Power")   ,
+      
+         br(), 
+          br(), 
+      
+           tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$BB,
+               
+              "Power")   ,
+     
+        br(),  br(),
+  
+     tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$CC,
+               
+              "Power")   ,
+     
+        br(),  br(),
+   
+     
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$DD,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+          
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$EE,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+     
+          
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$FF,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+
+       "."))
+
+ })
+ 
+ 
 
 
 

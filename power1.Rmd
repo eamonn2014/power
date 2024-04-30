@@ -1368,24 +1368,24 @@ Proportional odds simulation
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter cell probabilities of interest separated by a comma. Must sum to 1**
+**Enter cell probabilities of interest separated by a comma. There will be as many intercepts as possible levels of y  minus 1. Category probabilities must sum to 1!**
 
 ```{r po sim time}
           
           splitLayout(
-          textInput("p1s",    div(h5(tags$span(style="color:blue", "hyp. proportion(s) \U1D7B9 1...n"))),    
+          textInput("p1s",    div(h5(tags$span(style="color:blue", "hyp. proportions \U1D7B9 1...n"))),    
           value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
            
           splitLayout(
           textInput("ors", div(h5(tags$span(style="color:blue", "odds ratio"))), 
-          value= "1.5"),  )
+          value= "1.7"),  )
           
           splitLayout(
-          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors)"))), 
-          value= "0.025"),  )
+          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"),  )
           
           splitLayout(
-          textInput("Qs",    div(h5(tags$span(style="color:blue", "ratios for unequal randomisation"))),   
+          textInput("Qs",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
           value= "0.5"),)          
           
           splitLayout(
@@ -1395,16 +1395,9 @@ Column {.sidebar}
                 
           splitLayout(
           textInput("N",    div(h5(tags$span(style="color:blue", "total sample size"))),   
-          value= "500"),)        
+          value= "512"),)        
           
-                                  
-          # sliderInput('x_rangepos', 'Plot x-range', value = c(0,800),
-          #         min = 0, max = 5000,step=100,ticks=F)
-          # 
-          # sliderInput('y_rangepos', 'Plot y-range', value = c(0,1),
-          #         min = 0, max = 1,step=.05,ticks=F)
-
-   
+    
           br()
    
           
@@ -1430,14 +1423,8 @@ Column {.sidebar}
           # beta_trt <- log(1.7)
           
           #--------------------------------------------------------------------------
-          # input probabilities, total sample size, trt effect on log scale
-        
-          # 
-   
-          
-          
-        
-        
+          # input probabilities, total sample size, trt effect on log scale , and fraction for randomisation
+       
           POsim <- function(P, n, beta_trt, Q) 
             
             {
@@ -1447,18 +1434,9 @@ Column {.sidebar}
               tmp <- runif(n)                           # use this to determine y
               m = matrix(NA, nrow=(n), ncol=L-1 )       # use to help calculate y
               
-              #trt <- sample(c(0, 1), n, replace=TRUE)   # treatment indicator
-                    # get for the simulation
+              # treatment indicator
               trt <- sample(x=c(0, 1), size=n, prob=c(1-Q, Q) , replace=TRUE)
-              
-             
-              
-              # table(trt)
-              # n1
-              # n2
-               
-               
-               
+                
               #------------------------------------------
               # get the cum log odds p1/p2+p3+p4+p5 , p1+p2 / p3+p4+p5 ....
               lo <- c()
@@ -1506,10 +1484,8 @@ Column {.sidebar}
            out <- replicate(ss, POsim(P =P, n=N, beta_trt=log(or), Q=Q ) )
            pvalue <- mean( out <= sig.level )  #  
            #-------------------------------------------------------------------------
-   
       
-           
-            # Now harrell's function, collect the pvalue
+           # 2 Now harrell's function, collect the pvalue
            n2 <- round( N * Q )
            n1 <- N - n2 
            harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
@@ -1579,23 +1555,79 @@ Column {.sidebar}
 
 ```{r  plot6, eval=TRUE}
 
- DT::renderDataTable({
+#  DT::renderDataTable({
+# 
+#       p <-  pors()$pvalue
+#       h  <- pors()$harrell
+#       
+#       p <-  as.data.frame(cbind(h ,p))
+#       namez <- c("Hmisc::popower","Simulated power")
+#       names(p) <- namez
+#     
+#       d1 <-  DT::datatable(p, rownames=FALSE,
+#                       plugins = 'natural',
+#                       )
+#     
+#       d1 <- DT::formatRound(d1,  columns=namez ,  digits=5)
+#       
+#       d1
+# })
 
-      p <-  pors()$pvalue
-      h  <- pors()$harrell
+ 
+#-------------------------------------------------------------------------------------------------------
+
+h5(htmlOutput("intro1")) 
+br()
+ 
+
+#-------------------------------------------------------------------------------------------------------
+
+ output$intro1 <- renderText({  # create interactive text t1
+
+ 
+    print(paste0(
       
-      p <-  as.data.frame(cbind(h ,p))
-      namez <- c("Hmisc::popower","Simulated power")
-      names(p) <- namez
-    
-      d1 <-  DT::datatable(p, rownames=FALSE,
-                      plugins = 'natural',
-                      )
-    
-      d1 <- DT::formatRound(d1,  columns=namez ,  digits=5)
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", 
+               
+               "Power for proportional odds model")   ,
+      br(), 
+         br(), 
+          br(), 
       
-      d1
-})
+      
+     tags$span(style="color:black;font-weight:bold;font-size: 20px;",  pors()$harrell,
+               
+               "this is power from Hmisc:popower ") ,
+     
+        br(), 
+     
+     tags$span(style="color:black;font-weight:bold;font-size: 20px;",  pors()$pvalue,
+               
+               "this is power from simulation ") ,
+     
+      br(),  br(), 
+     
+        tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+               
+               "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y greater than >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome.") ,
+
+   br(),  br(), 
+     
+        tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+               
+               "For the randomisation allocation, 0.5 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 33% of patients are randomised to the treatment arm.") ,
+      
+   br(),  br(), 
+       tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+               
+               "With the PO model, every category can even have only 1 entry. The WRST test works best when there are no ties (P values are more accurate). The PO model also works well if there are a huge numbers of ties. For example, even if 97% of data were at y=0, clumped at zero, this is no issue. The model handles ceiling effects and floor effects. If y is bimodal or trimodal, no problem again. The Hmisc package has the functions lrm (discrete ordnial and can handle 200 intercepts) and orm (more for continuious data and can handle 8,000 intercepts speedily and has other link functions also) for ordinal regression. ") ,
+   
+   
+       "."))
+
+ })
+# proportional e↵ect of treatment across the scale of the ordinal outcome
+
 
 
 

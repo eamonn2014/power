@@ -1673,12 +1673,12 @@ Column {.sidebar}
           value= "0.05"),  )
      
           splitLayout(
-          textInput("ss",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
+          textInput("ss1",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
           value= "500"),)                                
                              
                 
           splitLayout(
-          textInput("N",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          textInput("N1",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
           value= "40"),)        
           
     
@@ -1691,8 +1691,8 @@ Column {.sidebar}
         mus         <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
         link         <-   (as.numeric(unlist(strsplit(input$link    ,","))))    # fraction
         sds        <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
-        ss        <-   (as.numeric(unlist(strsplit(input$ss    ,","))))
-        N         <-   (as.numeric(unlist(strsplit(input$N     ,","))))
+        ss        <-   (as.numeric(unlist(strsplit(input$ss1    ,","))))
+        N         <-   (as.numeric(unlist(strsplit(input$N1     ,","))))
 #------------------------------------------------------------------------------------------------------------  
       
       

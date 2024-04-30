@@ -1609,7 +1609,7 @@ br()
      
         tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                
-               "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y greater than >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome.") ,
+               "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome.") ,
 
    br(),  br(), 
      

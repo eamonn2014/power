@@ -1652,34 +1652,34 @@ Three arm trial (continuous and binary)
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter  **
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous**
 
 ```{r threearm1}
           
           splitLayout(
-          textInput("mus",    div(h5(tags$span(style="color:blue", "hyp. proportions \U1D7B9 1...n"))),    
+          textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
+          value= "1"),)
+
+          splitLayout(
+          textInput("mus",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
           value= ".9,.8,.7"),)
            
           splitLayout(
-          textInput("sds", div(h5(tags$span(style="color:blue", "SD"))), 
+          textInput("sds", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
           value= "5.22,5.22,5.22"),  )
           
           splitLayout(
           textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
           value= "0.05"),  )
-          
+     
           splitLayout(
-          textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
-          value= "1"),)
-          
-          splitLayout(
-          textInput("ss",    div(h5(tags$span(style="color:blue", "simulations"))),   
+          textInput("ss",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
           value= "500"),)                                
                              
                 
           splitLayout(
-          textInput("N",    div(h5(tags$span(style="color:blue", "total sample size"))),   
-          value= "512"),)        
+          textInput("N",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          value= "40"),)        
           
     
           br()
@@ -1695,14 +1695,7 @@ Column {.sidebar}
         N         <-   (as.numeric(unlist(strsplit(input$N     ,","))))
 #------------------------------------------------------------------------------------------------------------  
       
-        #    mus <- c(10,9,8)
-        # mus=c(.9,.8,.7)
-        #    link=1   # proportion
-        #   sds <- c(5.2,5.2,5.2)
-        # ss=1000
-        # sig.level =0.05
-        # N=100
-        
+      
         # from multiarm power simulations4.R
         
     three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var=1 )
@@ -1757,24 +1750,16 @@ Column {.sidebar}
              n=N, alpha=sig.level, out.var=link, nSims=ss)     
         
         
-#
-#  x <- three.arm(u0=.8, u1=.6, u2=.6, sigma0=5.22, sigma1=5.22, sigma2=5.22, n=170, alpha=.05, out.var=1, nSims=1000)
-  #       
-  # three.arm(u0=8, u1=6, u2=6, sigma0=5.22, sigma1=5.22, sigma2=5.22, n=170, alpha=.05, out.var=2, nSims=1000)  
-  #       
-  #       
-
-        
      return(list(  
        
-       AA =  paste0(x[1],x[2]),
-       BB =  paste0(x[3],x[4]),
+       AA =  paste(x[1],x[2]),
+       BB =  paste(x[3],x[4]),
        
-       CC =  paste0(x[5],x[6]),
-       DD =  paste0(x[7],x[8]),
+       CC =  paste(x[5],x[6]),
+       DD =  paste(x[7],x[8]),
        
-       EE =  paste0(x[9],x[10]),
-       FF =  paste0(x[11],x[12])
+       EE =  paste(x[9],x[10]),
+       FF =  paste(x[11],x[12])
        
       ))    
  

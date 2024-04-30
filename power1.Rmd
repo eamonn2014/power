@@ -1432,7 +1432,13 @@ Column {.sidebar}
           #--------------------------------------------------------------------------
           # input probabilities, total sample size, trt effect on log scale
         
-          POsim <- function(P, n, beta_trt) 
+          # 
+   
+          
+          
+        
+        
+          POsim <- function(P, n, beta_trt, Q) 
             
             {
             
@@ -1440,8 +1446,19 @@ Column {.sidebar}
               L <- length(P)                            # how many probabilities are there?
               tmp <- runif(n)                           # use this to determine y
               m = matrix(NA, nrow=(n), ncol=L-1 )       # use to help calculate y
-              trt <- sample(c(0, 1), n, replace=TRUE)   # treatment indicator
               
+              #trt <- sample(c(0, 1), n, replace=TRUE)   # treatment indicator
+                    # get for the simulation
+              trt <- sample(x=c(0, 1), size=n, prob=c(1-Q, Q) , replace=TRUE)
+              
+             
+              
+              # table(trt)
+              # n1
+              # n2
+               
+               
+               
               #------------------------------------------
               # get the cum log odds p1/p2+p3+p4+p5 , p1+p2 / p3+p4+p5 ....
               lo <- c()
@@ -1484,21 +1501,19 @@ Column {.sidebar}
            # mean( out <= 0.05 )  # PASS 
            # -------------------------------------------------------------------------
            
+           # execute the function
            #--------------------------------------------------------------------------
-           out <- replicate(ss, POsim(P =P, n=N, beta_trt=log(or) ) )
+           out <- replicate(ss, POsim(P =P, n=N, beta_trt=log(or), Q=Q ) )
            pvalue <- mean( out <= sig.level )  #  
            #-------------------------------------------------------------------------
+   
+      
            
-           
-           
-           harrell <-  Hmisc::popower(p=P, odds.ratio=or,  n=N,   alpha=sig.level )[[1]]
-           
-           
-           
-           
-           
-           
-           
+            # Now harrell's function, collect the pvalue
+           n2 <- round( N * Q )
+           n1 <- N - n2 
+           harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
+    
            
      return(list(  
        
@@ -1575,9 +1590,6 @@ Column {.sidebar}
     
       d1 <-  DT::datatable(p, rownames=FALSE,
                       plugins = 'natural',
-                      # options = list(
-                      #   columnDefs = list(list(type = 'natural', targets = c(1,2)))
-                      # )
                       )
     
       d1 <- DT::formatRound(d1,  columns=namez ,  digits=5)

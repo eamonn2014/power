@@ -952,12 +952,12 @@ splitLayout(
                                        )
           
           splitLayout(
-          textInput("alpha", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors)"))), 
+          textInput("alpha", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors two-sided)"))), 
           value= "0.025, 0.05"), 
                                        )
                                          
           splitLayout(
-          textInput("Q",    div(h5(tags$span(style="color:blue", "ratios for unequal randomisation"))),   
+          textInput("Q",    div(h5(tags$span(style="color:blue", "ratios for unequal randomisation \n (1 for equal randomisation)"))),   
           value= "0.5, 1"),)                                
                                         
           sliderInput('x_rangepo', 'Plot x-range', value = c(0,800),
@@ -1100,7 +1100,7 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model." )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model. \n- For the randomisation allocation, 1 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 75% of patients are randomised to the treatment arm." )) +
 
   ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority) ") )
 
@@ -1381,12 +1381,12 @@ Column {.sidebar}
           value= "1.7"),  )
           
           splitLayout(
-          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error two-sided)"))), 
           value= "0.05"),  )
           
           splitLayout(
           textInput("Qs",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "0.5"),)          
+          value= "1"),)          
           
           splitLayout(
           textInput("ss",    div(h5(tags$span(style="color:blue", "simulations"))),   
@@ -1437,8 +1437,17 @@ Column {.sidebar}
               tmp <- runif(n)                           # use this to determine y
               m = matrix(NA, nrow=(n), ncol=L-1 )       # use to help calculate y
               
+              
+              # so 2 = 2/3 to 1
+              # so 3 = .75 to1
+              p1 <- 1/(Q+1) 
+        
+              p2 <- 1- p1 
+
+              trt <- sample(x=c(0, 1), size=n, prob=c(p2, p1) , replace=TRUE)
+              
               # treatment indicator
-              trt <- sample(x=c(0, 1), size=n, prob=c(1-Q, Q) , replace=TRUE)
+              #trt <- sample(x=c(0, 1), size=n, prob=c(1-Q, Q) , replace=TRUE)
                 
               #------------------------------------------
               # get the cum log odds p1/p2+p3+p4+p5 , p1+p2 / p3+p4+p5 ....
@@ -1489,8 +1498,17 @@ Column {.sidebar}
            #-------------------------------------------------------------------------
       
            # 2 Now harrell's function, collect the power
-           n2 <- round( N * Q )
-           n1 <- N - n2 
+          # n2 <- round( N * Q )
+           #n1 <- N - n2 
+           
+           
+            n1 <- round(1/(Q+1) * N)
+        
+            n2 <- N- n1 
+
+           
+           
+           
            harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
     
            
@@ -1618,7 +1636,7 @@ br()
      
         tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                
-               "For the randomisation allocation, 0.5 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 33% of patients are randomised to the treatment arm.") ,
+               "For the randomisation allocation, 1 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 75% of patients are randomised to the treatment arm.") ,
       
    br(),  br(), 
        tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
@@ -1652,7 +1670,7 @@ Three arm trial (continuous and binary)
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous**
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
 
 ```{r threearm1}
           
@@ -1721,7 +1739,7 @@ Column {.sidebar}
     z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
     z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
     
-    t1=2*(1-pnorm(z1))  # 2 sided p-valu
+    t1=2*(1-pnorm(z1))  # 2 sided p-value
     t2=2*(1-pnorm(z2))
     t3=2*(1-pnorm(z3))
     

@@ -1878,7 +1878,7 @@ br()
 ``` 
 
 
-Three arm trial (continuous and binary) 2
+Three arm trial (continuous and binary) with figure
 ===
 
 ```{r, threearm2}
@@ -1915,9 +1915,9 @@ Column {.sidebar}
           value= "500"),)                                
                              
                 
-          splitLayout(
-          textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
-          value= "40"),)        
+          # splitLayout(
+          # textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          # value= "40"),)        
           
   sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
                   min = 0, max = 5000,step=100,ticks=F)
@@ -1930,8 +1930,7 @@ Column {.sidebar}
           
           
           #----------------function
-          
-                  # from multiarm power simulations4.R
+        # from multiarm power simulations4.R
         
     three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var )
 {
@@ -1992,35 +1991,7 @@ Column {.sidebar}
 
           
           #----------------end function
-          
-          
-          
-#       u0=.5
-#       u1=.3
-#       u2=.5
-#       sigma0=sigma2=sigma1=.3
-#       A=alpha=0.05
-#       out.var=1
-#       ss=nSims=1000
-#       N=2000
-# ##  
-#        three.arm.v2(u0=u0, u1=u1, u2=u2, sigma0=sigma0, sigma1=sigma1, sigma2=sigma2, 
-#              n=N, alpha=alpha, out.var=out.var, nSims=nSims)       
-#           
-#           mus=c(.9,.8,.6)
-#           sds=c(.3,.3,.3) 
-#                    link=1              
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
-   
+ 
           
  threearmx <- reactive({
   
@@ -2029,56 +2000,36 @@ Column {.sidebar}
         link         <-   (as.numeric(unlist(strsplit(input$link2    ,","))))    # fraction
         sds        <-   (as.numeric(unlist(strsplit(input$sds2   ,","))))   
         ss        <-   (as.numeric(unlist(strsplit(input$ss12    ,","))))
-        N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
-#------------------------------------------------------------------------------------------------------
- 
-
-          n= seq(2,input$x_rangepo[2], 2)
+      #  N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
+#---------------------------------------------------------------------------------------------------
+          n= seq(2,input$x_rangepo2[2], 2)
+        
+        # create a dataset , this will be input to function
         
         d <- tidyr::expand_grid(mu1=mus[1], mu2=mus[2], mu3=mus[3],
-sigma0=sds[1], sigma1=sds[2], sigma2=sds[3],
-alpha=sig.level, out.var=link,  n=n)
- # 
-        bvout<-matrix(NA, ncol=6, nrow=length(n))
-        bvout <- as.data.frame(bvout)
+              sigma0=sds[1], sigma1=sds[2], sigma2=sds[3],
+              alpha=sig.level, out.var=link,  n=n)
+  
+              bvout <- matrix(NA, ncol=6, nrow=length(n))
+              bvout <- as.data.frame(bvout)
    
+    #apply function to each row    
+        
    for( i in 1: length(n)) {
      
- bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
-                            sigma0=d$sigma0 [i], sigma1=d$sigma1[i], sigma2=d$sigma2[i], 
-             n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
+         bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
+                        sigma0=d$sigma0 [i], sigma1=d$sigma1[i], sigma2=d$sigma2[i], 
+                        n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
   
- }
+            }
        
-        
-        
         result <- cbind(bvout, d)
-        
-        
-    #    "power arm1 v placebo being signif. ",   formatz4(P1),
-  #   "power arm2 v placebo being signif. ",formatz4(P2),
-  #   "power for both arms v placebo being signif.", formatz4(P3) ,
-  #   "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
-  #   "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
-  #   "power for at least one arm signif. v placebo ", formatz4(P6) 
-        
-        
+      
         names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", "at least 1", "mu1", "mu2", "mu3", "sigma0", 
 "sigma1", "sigma2", "alpha", "out.var", "n")
- #          
-
- #        ##--txt for legend
+ 
      x <- result
- #           
- #        txt <- with(x,paste0("OR=",or,", alpha ",alpha, ", \nratio=",frac))
- # 
- #        x$phrase <- txt
- #      
- #        x$tag <- as.character(x$phrase)
- #      
- #        result=x
- # 
- # 
+
     return(list(
 
        result=result
@@ -2088,38 +2039,6 @@ alpha=sig.level, out.var=link,  n=n)
  })
        
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- #####################################################################################
-
-
-
-
-# ## convert to long format with tidyr::pivot_longer
-# test_data_long_tidyr <- pivot_longer(test_data, cols = starts_with("var"))
-# 
-# ggplot(data=test_data_long_tidyr,
-#        aes(x=date, y=value, colour=name)) +
-#   geom_line() ## output not shown, it's equivalent to the below graph (with a tiny difference in the legend title)
-
-## convert to long format with reshape2::melt
-# test_data_long <- melt(x, id="n",  measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
-# "at least 1") )
-# 
-# ggplot(data=test_data_long,
-#        aes(x=n, y=value, colour=variable)) +
-#   geom_line()
-# 
-
-
-
 ```
  
  
@@ -2141,28 +2060,13 @@ renderPlot({
 "at least 1") )
  
  
- 
+  #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
   skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
            ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
                        ,  500))
 
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
  
-  # p$tag <- substring( p$tag, 2)
- 
-  # legendlabels <- data.frame(
-  #                   'stadtland'= unique(p$tag),
-  #                   stringsAsFactors=FALSE)
-
-   # p <- p[,c(  "n" , "alpha",   "power",   "frac", "or" ,"tag")]
-   # names(p)  <-    c( "n" , "alpha",   "power",   "ratio", "variable", "tag")
-  #-----------------------------------------------------------------------
-   
-    # p <- as.data.frame(p)
-   # p$ratio <- factor(p$ratio)
-   # p$variable <- factor(p$variable)
-  
   all <- ggplot(data=L,
        aes(x=n, y=value, 
            colour=variable)) +
@@ -2202,7 +2106,7 @@ renderPlot({
     plot.background = element_rect(fill = 'white', colour = 'white')
   ) +
 
-
+  #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
 
   labs(y="Power", x = 'Total Sample Size', color = "Comparison")+
@@ -2216,8 +2120,7 @@ renderPlot({
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 
 print(all)
-#-----------------------------------------------------------
-#ggplotly(all)
+ 
  })
  
   
@@ -2237,11 +2140,7 @@ print(all)
  DT::renderDataTable({
 
     p <-  threearmx()$result
-     
       
-      
-      
-       #p <- as.data.frame(p)
        namez <- names(p)
       
   d1 <-  DT::datatable(p, rownames=FALSE,

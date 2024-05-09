@@ -1933,7 +1933,7 @@ Column {.sidebar}
           
                   # from multiarm power simulations4.R
         
-    three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var=1 )
+    three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var )
 {
   
   P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
@@ -2045,7 +2045,7 @@ alpha=sig.level, out.var=link,  n=n)
    for( i in 1: length(n)) {
      
  bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
-                            sigma0=d$sds1[i], sigma1=d$sds2[i], sigma2=d$sds3[i], 
+                            sigma0=d$sigma0 [i], sigma1=d$sigma1[i], sigma2=d$sigma2[i], 
              n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
   
  }
@@ -2224,12 +2224,46 @@ print(all)
   
  
 
-
-
-
-
-```
  
+```
+
+### Listing
+
+ 
+
+```{r listings8}
+
+
+ DT::renderDataTable({
+
+    p <-  threearmx()$result
+     
+      
+      
+      
+       #p <- as.data.frame(p)
+       namez <- names(p)
+      
+  d1 <-  DT::datatable(p, rownames=FALSE,
+                  plugins = 'natural',
+                  options = list(
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+    
+  
+     
+  
+      d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+      d1
+})
+
+```   
+ 
+
+
+
+
           
 References
 ====

@@ -1716,7 +1716,8 @@ Column {.sidebar}
       
         # from multiarm power simulations4.R
         
-    three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var=1 )
+    three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  
+                          nSims=sims , out.var=1 )
 {
   
   P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
@@ -1853,6 +1854,275 @@ br()
  })
  
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+``` 
+
+
+Three arm trial (continuous and binary) 2
+===
+
+```{r, threearm2}
+
+
+ 
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
+
+```{r threearm12, eval=TRUE}
+          
+          splitLayout(
+          textInput("link2",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
+          value= "1"),)
+
+          splitLayout(
+          textInput("mus2",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
+          value= ".9,.8,.7"),)
+           
+          splitLayout(
+          textInput("sds2", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
+          value= "5.22,5.22,5.22"),  )
+          
+          splitLayout(
+          textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"),  )
+     
+          splitLayout(
+          textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
+          value= "500"),)                                
+                             
+                
+          splitLayout(
+          textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          value= "40"),)        
+          
+    
+          br()
+          
+          
+          
+          #----------------function
+          
+                  # from multiarm power simulations4.R
+        
+    three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var=1 )
+{
+  
+  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
+          
+  if (out.var %in% 1)    {    
+          
+  sigma0=sqrt(u0*(1-u0)) #placebo se
+  sigma1=sqrt(u1*(1-u1)) #arm1 se
+  sigma2=sqrt(u2*(1-u2)) #arm2 se
+    
+  } 
+  
+  for (i in 1:nSims) {
+    
+    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
+    y1=rnorm(1, u1, sigma1/sqrt(n))
+    y2=rnorm(1, u2, sigma2/sqrt(n))
+    
+    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
+    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
+    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
+    
+    t1=2*(1-pnorm(z1))  # 2 sided p-value
+    t2=2*(1-pnorm(z2))
+    t3=2*(1-pnorm(z3))
+    
+    #power
+    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
+    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
+    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
+    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
+  }
+  
+  # return (c( 
+  #   "power arm1 v placebo being signif. ",   formatz4(P1),
+  #   "power arm2 v placebo being signif. ",formatz4(P2),
+  #   "power for both arms v placebo being signif.", formatz4(P3) ,
+  #   "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
+  #   "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
+  #   "power for at least one arm signif. v placebo ", formatz4(P6) 
+  # ))
+  
+  
+  structure (list( 
+       P1=P1,
+     P2=P2,
+   P3=P3 ,
+     P4=P4 ,
+     P5=P5 ,
+    P6=P6 
+  ))  
+  
+}
+
+          
+          #----------------end function
+          
+          
+          
+#       u0=.5
+#       u1=.3
+#       u2=.5
+#       sigma0=sigma2=sigma1=.3
+#       A=alpha=0.05
+#       out.var=1
+#       ss=nSims=1000
+#       N=2000
+# ##  
+#        three.arm.v2(u0=u0, u1=u1, u2=u2, sigma0=sigma0, sigma1=sigma1, sigma2=sigma2, 
+#              n=N, alpha=alpha, out.var=out.var, nSims=nSims)       
+#           
+#           mus=c(.9,.8,.6)
+#           sds=c(.3,.3,.3) 
+#                    link=1              
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+   
+          
+ threearmx <- reactive({
+  
+        sig.level <-   (as.numeric(unlist(strsplit(input$alphas2,","))))    
+        mus         <-   (as.numeric(unlist(strsplit(input$mus2   ,","))))    
+        link         <-   (as.numeric(unlist(strsplit(input$link2    ,","))))    # fraction
+        sds        <-   (as.numeric(unlist(strsplit(input$sds2   ,","))))   
+        ss        <-   (as.numeric(unlist(strsplit(input$ss12    ,","))))
+        N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
+#------------------------------------------------------------------------------------------------------
+ 
+
+          n = seq(2,100, 2)
+        
+        d <- tidyr::expand_grid(mu1=mus[1], mu2=mus[2], mu3=mus[3],
+sigma0=sds[1], sigma1=sds[2], sigma2=sds[3],
+alpha=sig.level, out.var=link,  n=n)
+ # 
+        bvout<-matrix(NA, ncol=6, nrow=length(n))
+        bvout <- as.data.frame(bvout)
+   
+   for( i in 1: length(n)) {
+     
+ bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
+                            sigma0=d$sds1[i], sigma1=d$sds2[i], sigma2=d$sds3[i], 
+             n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
+  
+ }
+       
+        
+        
+        result <- cbind(bvout, d)
+        
+        
+    #    "power arm1 v placebo being signif. ",   formatz4(P1),
+  #   "power arm2 v placebo being signif. ",formatz4(P2),
+  #   "power for both arms v placebo being signif.", formatz4(P3) ,
+  #   "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
+  #   "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
+  #   "power for at least one arm signif. v placebo ", formatz4(P6) 
+        
+        
+        names(result)  <-c("trt1vCtrl", "trt2vCtrl", "bothvCtrl", "conjunctive", "disjunctive", "atleast1", "mu1", "mu2", "mu3", "sigma0", 
+"sigma1", "sigma2", "alpha", "out.var", "n")
+ #          
+
+ #        ##--txt for legend
+     x <- result
+ #           
+ #        txt <- with(x,paste0("OR=",or,", alpha ",alpha, ", \nratio=",frac))
+ # 
+ #        x$phrase <- txt
+ #      
+ #        x$tag <- as.character(x$phrase)
+ #      
+ #        result=x
+ # 
+ # 
+ #    return(list(  
+ #       
+ #       result=result, P=P, or=or
+ #       
+ #      ))    
+ # 
+ })
+       
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ #####################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

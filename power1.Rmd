@@ -2209,7 +2209,7 @@ Column {.sidebar}
 -----------------------------------------------------------------------
 
 
-**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
+**Enter parameters of interest separated by a comma**
 
 ```{r}
 
@@ -2217,19 +2217,19 @@ Column {.sidebar}
   
           splitLayout(
           textInput("mu1x",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter up to 6 pop. means"))),    
-          value= "1, 2"),)
+                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter pop. means"))),    
+          value= "2"),)
            
           splitLayout(
           textInput("sd1x",    
-                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter up to 6 pop.   SDs"))),    
+                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter pop. SDs"))),    
           value= "3"),)
           
           
                  splitLayout(
           textInput("mu2x",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter up to 6 pop. means"))),    
-          value= "2,3"),)
+                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter pop. means"))),    
+          value= "3"),)
                  
                  
                         splitLayout(
@@ -2246,7 +2246,7 @@ Column {.sidebar}
                     
                     
                     
-          value= ".05, .025"), 
+          value= ".05"), 
                                        )
               
               
@@ -2312,7 +2312,7 @@ side <- ifelse(Ac==1,"one.sided",
                    ifelse(Ac==2,"two.sided", NA))
 
 
-d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ab)
+d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
 
 bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
 bvout <- as.data.frame(bvout)
@@ -2351,9 +2351,9 @@ result <- cbind(bvout, d)
 
 x <- result
 
-txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sigma2,")", 
+txt <- with(x,paste0("~\U1D728( ",mu1,", ",sigma2,")", 
                      " & ~\U1D728( ",mu2,", ",sigma2,")", 
-                     "\n\U1D7AA= ",alpha, " ",side, ", ratio=",ratio))
+                     "\n\U1D7AA= ",alpha, " ",side, ", \nrandomisation ratio=",ratio,"\n"))
 
 
 x$phrase <- txt

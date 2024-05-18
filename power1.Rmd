@@ -2521,25 +2521,33 @@ Column {.sidebar}
 ```{r nopo input}
 
           splitLayout(
-          textInput("p1_nopo",    div(h5(tags$span(style="color:blue", "hyp. proportion(s) \U1D7B9 1..n"))),    
+          textInput("p1_nopo",    div(h5(tags$span(style="color:blue", "Ref proportion(s) \U1D7B9 1..n"))),    
           value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
            
           splitLayout(
-          textInput("p2_nopo", div(h5(tags$span(style="color:blue", "odds ratios"))), 
-          value= "0.044, 0.019, 0.471, 0.149, 0.317"),  )
+          textInput("p2_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
+          value= "0.02823529, 0.02588235, 0.33764706, 0.36411765, 0.24411765,"),  )
+          
+            splitLayout(
+          textInput("p3_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
+          value= " 0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765,"),  )
+            
+              splitLayout(
+          textInput("p4_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
+          value= "0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765,"),  )
           
           splitLayout(
-          textInput("alpha_nopo", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors two-sided)"))), 
+          textInput("alpha_nopo", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
           value= "0.025"),   )
           
           splitLayout(
-          textInput("side_nopo", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors two-sided)"))), 
+          textInput("side_nopo", div(h5(tags$span(style="color:blue", "\U1D7AA (1 or 2 side)"))), 
           value= "1"),  )
           
           splitLayout(
           textInput("Q_nopo", 
-          div(h5(tags$span(style="color:blue", "ratios for unequal randomisation \n (1 for equal randomisation)"))), 
-          value= "0.5, 1"),)                                
+          div(h5(tags$span(style="color:blue", "ratio for unequal randomisation \n (0.5 for equal randomisation)"))), 
+          value= "0.5"),)                                
                                         
           sliderInput('x_range_nopo', 'Plot x-range', value = c(0,800),
                   min = 0, max = 5000,step=100,ticks=F)
@@ -2548,48 +2556,66 @@ Column {.sidebar}
                   min = 0, max = 1,step=.05,ticks=F)
 
           br()
+          
+          
+#            p1_nopo = c("0.044, 0.019, 0.471, 0.317, 0.149")
+# 
+#  p2_nopo = c("0.02823529, 0.02588235, 0.33764706, 0.36411765, 0.24411765")
+# 
+#  p3_nopo  =c("0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765")
+# 
+#   p4_nopo = c("0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765")
+# 
+# alpha_nopo = "0.025"
+# 
+#  side_nopo= "1"
+# 
+# Q_nopo = "0.5"
+# 
+#         x_range_nopo  = c(0,800)
+# y_range_nopo  = c(0,1)
+#           
+#           
+#            A <-   sig.level <-   (as.numeric(unlist(strsplit( alpha_nopo,","))))    
+#          Q         <-   (as.numeric(unlist(strsplit( Q_nopo,"," ))))    # fraction
+#       side         <-   (as.numeric(unlist(strsplit(side_nopo,"," ))))
+#          p1         <-  (  p1_nopo)    
+#          p2        <-   ( p2_nopo )
+#          p3         <-  (  p3_nopo)    
+#          p4        <-   ( p4_nopo )
+        
+           # n= seq(2,x_range_nopo[2], 2)
+           # 
+          
    
  por_NOPO <- reactive({
   
  A <-   sig.level <-   (as.numeric(unlist(strsplit(input$alpha_nopo,","))))    
-       # p1         <-   (as.numeric(unlist(strsplit(input$p1_nopo,","))))    
-        Q         <-   (as.numeric(unlist(strsplit(input$Q_nopo,"," ))))    # fraction
-      #  p2        <-   (as.numeric(unlist(strsplit(input$p2_nopo,","))))   
-    
-         p1         <-   ( input$p1_nopo)    
+         Q         <-   (as.numeric(unlist(strsplit(input$Q_nopo,"," ))))    # fraction
+      side         <-   (as.numeric(unlist(strsplit(input$side_nopo,"," ))))
+         p1         <-  ( input$p1_nopo)    
          p2        <-   (input$p2_nopo )
-     
-        
-          #   p1=c("0.044, 0.019, 0.471, 0.317, 0.149")
-          # 
-          # p2 = c("0.044, 0.019, 0.471, 0.149, 0.317")
-          # 
-          #  A = 0.025
-          # 
-          #  side_nopo=1
-          # 
-          #  Q  = c(0.5, 1)
-          # 
-          # x_range_nopo  = c(0,800)
-          #        y_range_nopo = c(0,1)
-          #   n= seq(2,100, 2)
-
- 
-        
-        
-        
- 
+         p3         <-  ( input$p3_nopo)    
+         p4        <-   (input$p4_nopo )
         
         n= seq(2,input$x_range_nopo[2], 2)
 
-        d <- tidyr::expand_grid(p1 = p1, p2=p2, alpha=A, frac =Q, n=n , side=1)
-       
-        d$n1 <- round(d$n*d$frac/(d$frac+1))
+    #    d <- tidyr::expand_grid(p1 = p1, p2=p2, alpha=A, frac =Q, n=n , side=side)
+        
+        #new
+       d <- tidyr::expand_grid(p1 = p1, p2=p2,  p3=p3, p4=p4,alpha=A, frac =Q, n=n , side=side)
+        d$n1 <- round(d$n*d$frac  )
         
         d$n2 <- d$n - d$n1 
         
+        #d$id <- 1:dim(d)[1]
+        #d$n1 <-d$n2 <- NULL
+         L <- reshape2::melt(d,  id.vars=c("n", "alpha", "frac","side","p1"),
+           measure.vars=c("p2","p3","p4") )
+ #end new
+        
     #--------------------------------------------------------------------------------------------------------------------
-    # return power
+    # return power function
     non_po_power<- function(alpha, t, p, q, N, side) {
       D <- length(p)
       Z_alpha <- qnorm(1-alpha/side)
@@ -2600,23 +2626,37 @@ Column {.sidebar}
     }
     
     # To invoke the function, provide values for alpha, side, t, p, q, D, and N, for example:
-    d$power=NA
-        
-    for(i in 1: dim(d)[1]) {   
-    p <- (as.numeric(unlist(strsplit(d$p1[i],","))))  
-    q <- (as.numeric(unlist(strsplit(d$p2[i],",")))) 
+#     d$power=NA
+#         
+# for(i in 1: dim(d)[1]) {   
+#  
+#     p <- (as.numeric(unlist(strsplit(d$p1[i],","))))  
+#     q <- (as.numeric(unlist(strsplit(d$p2[i],",")))) 
+#     
+#     d$power[i] <- non_po_power(alpha = d$alpha[i], side=d$side[i], t = d$frac[i], p = p,  q =q,  N = n[i])
+#     #--------------------------------------------------------------------------------------------------------------------
+#  }
+#  
+#  
+    L$power=NA
     
-    p <- (as.numeric(unlist(strsplit(d$p1[i],","))))  
-    q <- (as.numeric(unlist(strsplit(d$p2[i],",")))) 
-   d$power[i] <- non_po_power(alpha = d$alpha[i], side=d$side[i], t = d$frac[i], p = p,  q =q,  N = n[i])
+  for(i in 1: dim(L)[1]) {   
+ 
+    p <- (as.numeric(unlist(strsplit(L$p1[i],","))))  
+    # q <- (as.numeric(unlist(strsplit(L$p2[i],",")))) 
+    # 
+    # q1 <- (as.numeric(unlist(strsplit(L$p3[i],",")))) 
+    # q2 <- (as.numeric(unlist(strsplit(L$p4[i],",")))) 
+    # 
+    L$power[i] <- non_po_power(alpha = L$alpha[i], side=L$side[i], t = L$frac[i], 
+                               p = p,  q =(as.numeric(unlist(strsplit(L$value[i],",")))) ,  N = L$n[i])
     #--------------------------------------------------------------------------------------------------------------------
  }
  
  
- 
     return(list(  
        
-       result=d 
+       result=L
        
       ))    
  
@@ -2662,13 +2702,13 @@ renderPlot({
    
     p <- as.data.frame(p)
    p$ratio <- factor(p$frac)
-  # p$variable <- factor(p$variable)
+  p$value <- factor(p$value)
   
   all <- ggplot(p, aes(x = n, y = power, 
                   # linetype=ratio,
-                   # group = interaction(ratio, variable, alpha),
+                    group = ( value),
                      
-                   colour = p1
+                   colour = value
                   
                   )) + # # had hr here initally mis match with legend
   geom_line() +
@@ -2712,9 +2752,9 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model. \n- For the randomisation allocation, 1 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 75% of patients are randomised to the treatment arm." )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Zhai et al equation 12. \n- Reference goes here." )) +
 
-  ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority) ") )
+  ggtitle(paste0(" Power (or total sample size) for non proportional odds (superiority and non-inferiority) ") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -2731,6 +2771,41 @@ print(all)
 
 
 
+ 
+
+ 
+```
+
+### Listing
+
+ 
+
+```{r listings9}
+
+
+ DT::renderDataTable({
+
+    p <-   por_NOPO()$result
+      
+    p$p1 <- p$p2 <- NULL
+    
+       namez <- names(p)
+      
+  d1 <-  DT::datatable(p, rownames=FALSE,
+                  plugins = 'natural',
+                  options = list(
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+    
+  
+     
+  
+      d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+      d1
+})
+
+ 
 
 
 

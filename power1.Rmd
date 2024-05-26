@@ -906,7 +906,7 @@ renderPlot({
 
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
   labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Explicit non-inferioirity example (n is total sample size, CV is the shared sd : PowerTOST::power.noninf( alpha=0.025, n= 50, logscale=FALSE, theta0=0, margin =2, CV=3,design='parallel') #0.64 power" )) +
 
@@ -964,16 +964,20 @@ Proportional odds
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter cell probabilities of interest separated by a comma. Must sum to 1**
+**With ordinal data, under proportional odds, the overall probability of each category is required. Enter cell probabilities of interest separated by a comma. Must sum to 1**
 
 ```{r tabn}
-splitLayout(
-          textInput("p1",    div(h5(tags$span(style="color:blue", "hyp. proportion(s) \U1D7B9 1..n"))),    
-          value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
-           
-                splitLayout(
+
+ splitLayout(
+          textInput("p1",    div(h5(tags$span(style="color:blue", "\U1D7B9 1..n"))),    
+          value= ".222,.323,.455"),)
+      
+ #"0.044, 0.019, 0.471, 0.317, 0.149"     
+
+
+          splitLayout(
           textInput("or", div(h5(tags$span(style="color:blue", "odds ratios"))), 
-          value= "1.5,2"), 
+          value= "1.840431"), 
                                        )
           
           splitLayout(
@@ -993,7 +997,12 @@ splitLayout(
 
    
           br()
-   
+
+          div(h5(tags$span(style="color:blue", "Most sample size formulae involve nuisance parameters, the values of which are unknown
+ when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression
+ model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). The above example [Whitehead, 1983], has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter p1 as (0.17+0.274)/2 = 0.222 etc.")))
+      
+             
           
  por <- reactive({
   
@@ -1127,11 +1136,11 @@ renderPlot({
 
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model. \n- For the randomisation allocation, 1 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 75% of patients are randomised to the treatment arm." )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Hmisc::popower to compute the power for a two-tailed two sample comparison of ordinal outcomes under the proportional odds ordinal logistic model. \n- For the randomisation allocation, 1 is equal to 1:1 randomisation. If 0.33 is entered for unequal randomisation, 75% of patients are randomised to the treatment arm.\n- The validity of the sample size calculation above depends on three assumptions. First, that the proportional odds model is at least approximately valid. Second, that the nuisance parameters involved in equation, namely the proportions of patients in each of the categories on placebo, \nare at least approximately as expected. Third, that none of the prognostic factors recorded at baseline have a major impact on the outcome measure. If any of these assumptions do not hold then the sample size calculated will not be valid, and the trial may not achieve its target power." )) +
 
-  ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority) ") )
+  ggtitle(paste0("Power (or total sample size) for ordinal catergorical data (superiority and non-inferiority)") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -1403,11 +1412,11 @@ Column {.sidebar}
           
           splitLayout(
           textInput("p1s",    div(h5(tags$span(style="color:blue", "hyp. proportions \U1D7B9 1...n"))),    
-          value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
-           
+          value= ".222,.323,.455" ),)
+           #"0.044, 0.019, 0.471, 0.317, 0.149"
           splitLayout(
           textInput("ors", div(h5(tags$span(style="color:blue", "odds ratio"))), 
-          value= "1.7"),  )
+          value= "1.840431"),  )
           
           splitLayout(
           textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error two-sided)"))), 
@@ -1424,7 +1433,7 @@ Column {.sidebar}
                 
           splitLayout(
           textInput("N",    div(h5(tags$span(style="color:blue", "total sample size"))),   
-          value= "512"),)        
+          value= "400"),)        
           
     
           br()
@@ -2526,7 +2535,7 @@ Column {.sidebar}
            
           splitLayout(
           textInput("p2_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
-          value= "0.02823529, 0.02588235, 0.33764706, 0.36411765, 0.24411765,"),  )
+          value= "0.2,.3,.1,.1,.3"),  )
           
             splitLayout(
           textInput("p3_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
@@ -2558,35 +2567,35 @@ Column {.sidebar}
           br()
           
           
-#            p1_nopo = c("0.044, 0.019, 0.471, 0.317, 0.149")
+#             p1_nopo = c("0.044, 0.019, 0.471, 0.317, 0.149")
 # 
-#  p2_nopo = c("0.02823529, 0.02588235, 0.33764706, 0.36411765, 0.24411765")
+#   p2_nopo = c("0.02823529, 0.02588235, 0.33764706, 0.36411765, 0.24411765")
 # 
-#  p3_nopo  =c("0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765")
+#   p3_nopo  =c("0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765")
 # 
-#   p4_nopo = c("0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765")
+#    p4_nopo = c("0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765")
 # 
-# alpha_nopo = "0.025"
+#  alpha_nopo = "0.025, 0.05"
 # 
-#  side_nopo= "1"
+#   side_nopo= "1"
 # 
-# Q_nopo = "0.5"
+#  Q_nopo = "0.5"
 # 
-#         x_range_nopo  = c(0,800)
-# y_range_nopo  = c(0,1)
-#           
-#           
-#            A <-   sig.level <-   (as.numeric(unlist(strsplit( alpha_nopo,","))))    
-#          Q         <-   (as.numeric(unlist(strsplit( Q_nopo,"," ))))    # fraction
-#       side         <-   (as.numeric(unlist(strsplit(side_nopo,"," ))))
-#          p1         <-  (  p1_nopo)    
-#          p2        <-   ( p2_nopo )
-#          p3         <-  (  p3_nopo)    
-#          p4        <-   ( p4_nopo )
-        
-           # n= seq(2,x_range_nopo[2], 2)
-           # 
-          
+#          x_range_nopo  = c(0,800)
+#  y_range_nopo  = c(0,1)
+# 
+# 
+#             A <-   sig.level <-   (as.numeric(unlist(strsplit( alpha_nopo,","))))
+#           Q         <-   (as.numeric(unlist(strsplit( Q_nopo,"," ))))    # fraction
+#        side         <-   (as.numeric(unlist(strsplit(side_nopo,"," ))))
+#           p1         <-  (  p1_nopo)
+#           p2        <-   ( p2_nopo )
+#           p3         <-  (  p3_nopo)
+#           p4        <-   ( p4_nopo )
+# 
+# n= seq(2,x_range_nopo[2], 2)
+#            #
+
    
  por_NOPO <- reactive({
   
@@ -2612,6 +2621,10 @@ Column {.sidebar}
         #d$n1 <-d$n2 <- NULL
          L <- reshape2::melt(d,  id.vars=c("n", "alpha", "frac","side","p1"),
            measure.vars=c("p2","p3","p4") )
+         
+         
+         
+         
  #end new
         
     #--------------------------------------------------------------------------------------------------------------------
@@ -2626,33 +2639,55 @@ Column {.sidebar}
     }
     
     # To invoke the function, provide values for alpha, side, t, p, q, D, and N, for example:
-#     d$power=NA
-#         
-# for(i in 1: dim(d)[1]) {   
-#  
-#     p <- (as.numeric(unlist(strsplit(d$p1[i],","))))  
-#     q <- (as.numeric(unlist(strsplit(d$p2[i],",")))) 
-#     
-#     d$power[i] <- non_po_power(alpha = d$alpha[i], side=d$side[i], t = d$frac[i], p = p,  q =q,  N = n[i])
-#     #--------------------------------------------------------------------------------------------------------------------
-#  }
-#  
+ 
 #  
     L$power=NA
     
   for(i in 1: dim(L)[1]) {   
  
     p <- (as.numeric(unlist(strsplit(L$p1[i],","))))  
-    # q <- (as.numeric(unlist(strsplit(L$p2[i],",")))) 
-    # 
-    # q1 <- (as.numeric(unlist(strsplit(L$p3[i],",")))) 
-    # q2 <- (as.numeric(unlist(strsplit(L$p4[i],",")))) 
-    # 
+   
     L$power[i] <- non_po_power(alpha = L$alpha[i], side=L$side[i], t = L$frac[i], 
                                p = p,  q =(as.numeric(unlist(strsplit(L$value[i],",")))) ,  N = L$n[i])
     #--------------------------------------------------------------------------------------------------------------------
  }
  
+ 
+# Function to round numbers in a string for dispay purposes
+round_numbers_in_string <- function(num_string) {
+  # Step 1: Split the string into individual numbers
+  num_vector <- strsplit(num_string, ",")[[1]]
+  
+  # Step 2: Convert the split strings to numeric values
+  num_vector <- as.numeric(trimws(num_vector))
+  
+  # Step 3: Round the numeric values
+  rounded_vector <- round(num_vector, digits = 3)
+  
+  # Step 4: Combine the rounded values back into a single string
+  rounded_string <- paste(rounded_vector, collapse = ", ")
+  
+  return(rounded_string)
+}
+
+# Apply the function to the num_string column
+L$value <- sapply(L$value, round_numbers_in_string)
+
+#--------------------------------------------------------
+
+ ##--txt for legend
+        x <- L
+           
+        txt <- with(x,paste0("Treatment outcome distribution\n",value,"\nalpha ",alpha, ", side ",side,", ratio=",frac,"\n"))
+ 
+        x$phrase <- txt
+      
+        x$Scenario <- as.character(x$phrase)
+        
+        x$phrase <- NULL
+        
+        L <- x
+    
  
     return(list(  
        
@@ -2700,15 +2735,17 @@ renderPlot({
   # names(p)  <-    c( "n" , "alpha",   "power",   "ratio", "variable", "tag")
   #-----------------------------------------------------------------------
    
-    p <- as.data.frame(p)
-   p$ratio <- factor(p$frac)
-  p$value <- factor(p$value)
-  
+  p <- as.data.frame(p)
+  p$ratio <- factor(p$frac)
+  p$value <-  factor(p$value) #formatz2(as.numeric(p$value)) 
+  p$alpha <- factor(p$alpha)
+  p$side <-    factor(p$side)
   all <- ggplot(p, aes(x = n, y = power, 
                   # linetype=ratio,
-                    group = ( value),
+                   group = interaction(ratio, value, alpha, side),
+                   # group = ( value),
                      
-                   colour = value
+                   colour = Scenario
                   
                   )) + # # had hr here initally mis match with legend
   geom_line() +
@@ -2718,7 +2755,7 @@ renderPlot({
                 limits = c(input$y_range_nopo[1],     input$y_range_nopo[2])) +
     
   scale_x_continuous(breaks =
-                       seq(input$x_range_nopo[1],         input$x_range_nopo[2], skips), 
+                       seq(input$x_range_nopo[1],  input$x_range_nopo[2], skips), 
                 limits = c(input$x_range_nopo[1],  input$x_range_nopo[2])) +
     
   theme_bw() +
@@ -2750,7 +2787,7 @@ renderPlot({
 
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "variable", linetype="Ratio" )+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
   labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Zhai et al equation 12. \n- Reference goes here." )) +
 

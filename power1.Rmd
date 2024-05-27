@@ -236,7 +236,7 @@ s22 <- reactive({
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 9
+### Chart 1
 
 ```{r surv plot9, eval=TRUE}
 
@@ -429,7 +429,7 @@ Column {.sidebar}
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 4
+### Chart 2
 
 ```{r surv plot4, eval=TRUE}
 
@@ -513,8 +513,10 @@ print(all)
 #ggplotly(all)
  })
  
- 
+### Column {.tabset .tabset-fade} <- this will split page in two
 ```
+
+
 
 ### Wiki
 
@@ -523,19 +525,40 @@ print(all)
 
 h5(htmlOutput("powiki")) 
 br()
+ h5(htmlOutput("powiki2")) 
+
  
 #-------------------------------------------------------------------------------------------------------
+
+  output$powiki2 <- renderText({
+    text <- "Click here to visit Whitehead, 1988"
+    link <- "<a href='https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf', target='_self', >Whitehead 1988</a>"
+    paste0(text, " ", link)
+  })
+
+
 
  output$powiki <- renderText({  # create interactive text t1
 
  
+ 
+    # text <- "Click here to visit Google"
+    # link <- "<a href='https://www.google.com'>Google</a>"
+    # paste0(text, " ", link)
+    # 
+    # 
+   
 print(paste0(   
    
    tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
         
-                 "Most sample size formulae involve nuisance parameters, the values of which are unknown when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). We use the example in Whitehead, 1983, which has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter the reference peoportion as (0.17+0.274)/2 = 0.222 etc."),
-         
-        br(),  br(), 
+                 "Most sample size formulae involve nuisance parameters, the values of which are unknown when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). We use the example in Whitehead, 1988, which has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter the reference proportion as (0.17 + 0.274)/2 = 0.222 etc."),
+    
+ # tags$a(href = "https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf", 
+ #            target="_blank",
+ #        tags$span(style="color:blue", "SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998"),) ,
+   
+           br(),  br(), 
        
           tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                  
@@ -548,7 +571,7 @@ print(paste0(
                  "With the PO model, every category can even have only 1 entry. The WRST test works best when there are no ties (P values are more accurate). The PO model also works well if there are a huge numbers of ties. For example, even if 97% of data were at y=0, clumped at zero, this is no issue. The model handles ceiling effects and floor effects. If y is bimodal or trimodal, no problem again. The Hmisc package has the functions lrm (discrete ordnial and can handle 200 intercepts) and orm (more for continuious data and can handle 8,000 intercepts speedily and has other link functions also) for ordinal regression. ") ,
      
          "."))
-
+   
  })
  
   
@@ -1095,19 +1118,19 @@ Column {.sidebar}
 
           splitLayout(
           textInput("p1_nopo",    div(h5(tags$span(style="color:blue", "Ref proportion(s) \U1D7B9 1..n"))),    
-          value= "0.044, 0.019, 0.471, 0.317, 0.149"),)
+          value= "0.66, 0.15, 0.19"),)
            
           splitLayout(
           textInput("p2_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
-          value= "0.2,.3,.1,.1,.3"),  )
+          value= "0.40, 0.00, 0.60"),  )
           
           splitLayout(
           textInput("p3_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
-          value= " 0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765,"),  )
+          value= "0.58, 0.15, 0.27,"),  )
             
           splitLayout(
           textInput("p4_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
-          value= "0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765,"),  )
+          value= "0.58, 0.20, 0.22"),  )
           
           splitLayout(
           textInput("alpha_nopo", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
@@ -1120,9 +1143,9 @@ Column {.sidebar}
           splitLayout(
           textInput("Q_nopo", 
           div(h5(tags$span(style="color:blue", "ratio for unequal randomisation \n (0.5 for equal randomisation)"))), 
-          value= "0.5"),)                                
+          value= "0.53"),)                                
                                         
-          sliderInput('x_range_nopo', 'Plot x-range', value = c(0,800),
+          sliderInput('x_range_nopo', 'Plot x-range', value = c(0,1500),
                   min = 0, max = 5000,step=100,ticks=F)
           
           sliderInput('y_range_nopo', 'Plot y-range', value = c(0,1),
@@ -1267,7 +1290,7 @@ L$value <- sapply(L$value, round_numbers_in_string)
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 9
+### Chart 3
 
 ```{r nopo, eval=TRUE}
 
@@ -1337,7 +1360,7 @@ renderPlot({
 
   labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Zhai et al equation 12. \n- Reference goes here." )) +
+  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Uses Zhao et al. equation 12 and reproduces selected examples from paper (see references)." )) +
 
   ggtitle(paste0(" Power (or total sample size) for non proportional odds (superiority and non-inferiority) ") )
 
@@ -1534,7 +1557,7 @@ $\alpha$ type I assertion error
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 2
+### Chart 4
 
 ```{r surv99, eval=TRUE}
 
@@ -1701,7 +1724,7 @@ $\alpha$ type I assertion error
 
 ## Column {.tabset .tabset-fade}
 
-### Chart 1
+### Chart 5
 
 ```{r newbin plot1}
 
@@ -1935,7 +1958,7 @@ Column {.sidebar}
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 8
+### Chart 6
 
 ```{r surv plot8, eval=TRUE}
 
@@ -2187,7 +2210,7 @@ Column {.sidebar}
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 7
+### Simulation
 
 ```{r threearmo, eval=TRUE}
  
@@ -2256,12 +2279,14 @@ br()
           
 References
 ====
+
+[RMARKDOWN CHEATSHEET](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
  
 [SIXTY PERCENT OF THE TIME IT WORKS EVERY TIME](https://www.ejobrien.com/)
             
 [PROPORTIONAL ODDS MODEL POWER CALCULATIONS FOR ORDINAL AND MIXED ORDINAL/CONTINUOUS OUTCOMES](https://www.fharrell.com/post/pop/)
             
-[SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998]( https://github.com/eamonn2014/power/blob/main/papers%20for%20git/bolland1998%20sampe%20size%20review%20in%20a%20head%20injury%20trial.pdf )
+[SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998]( https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf )
     
 [SAMPLE SIZE CALCULATIONS FOR ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/whitehead1993%20SAMPLE%20SIZE%20CALCULATIONS%20FOR%20ORDERED.pdf) 
 
@@ -2269,6 +2294,10 @@ References
 
 
 ```{r, refs}
+ 
+ 
+
+
  
     # div(p(" "))
     # tags$a(href = "https://www.ejobrien.com/", target="_blank",

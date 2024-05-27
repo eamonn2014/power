@@ -2186,19 +2186,35 @@ br()
           
 References
 ====
+
+[RStudio](https://www.rstudio.com)
+
+[Sixty percent of the time it works every time](https://www.ejobrien.com/)
+            
+[Proportional Odds Model Power Calculations for Ordinal and Mixed Ordinal/Continuous Outcomes](https://www.fharrell.com/post/pop/)
+            
+[SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES , WHITHEAD 1998]( https://github.com/eamonn2014/power/blob/main/papers%20for%20git/bolland1998%20sampe%20size%20review%20in%20a%20head%20injury%20trial.pdf )
+    
+[SAMPLE SIZE CALCULATIONS FOR ORDERED CATEGORICAL RESPONSES , WHITHEAD 1998](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/whitehead1993%20SAMPLE%20SIZE%20CALCULATIONS%20FOR%20ORDERED.pdf) 
+
+[SAMPLE SIZE CALCUALTION FOR THE WILCOXON MANN WHITNEY RANK SUM TEST ADJUSTING FOR TIES, AS USED IN PASS SOFTWARE FOR NON PROPORTIONAL ODDS POWER SAMPLE SIZE/CALCULATIONS. ZHAO 2008 ](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/zhao%202008%20non%20prop%20odds%20calc.pdf)
+
+
 ```{r, refs}
  
-    div(p(" "))
-    tags$a(href = "https://www.ejobrien.com/", target="_blank",
-           tags$span(style="color:blue", "[1] Sixty percent of the time it works every time <- more apps here!"),) 
-    div(p(" "))
-      tags$a(href = "https://www.fharrell.com/post/pop/", target="_blank",
-           tags$span(style="color:blue", "[2] Proportional Odds Model Power Calculations for Ordinal and Mixed Ordinal/Continuous Outcomes"),) 
-    div(p(" "))
-    
-    
-    
-    
-    tags$hr()                        
+    # div(p(" "))
+    # tags$a(href = "https://www.ejobrien.com/", target="_blank",
+    #        tags$span(style="color:blue", "[1] Sixty percent of the time it works every time <- more apps here!"),) 
+    # div(p(" "))
+    #   tags$a(href = "https://www.fharrell.com/post/pop/", target="_blank",
+    #        tags$span(style="color:blue", "[2] Proportional Odds Model Power Calculations for Ordinal and Mixed Ordinal/Continuous Outcomes"),) 
+    # div(p(" "))
+    # 
+    #      tags$a(href = "https://github.com/eamonn2014/power/blob/main/papers%20for%20git/bolland1998%20sampe%20size%20review%20in%20a%20head%20injury%20trial.pdf", target="_blank",
+    #        tags$span(style="color:blue", "[2] SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES"),) 
+    # div(p(" "))
+    # 
+    # 
+    # tags$hr()                        
 
 ```

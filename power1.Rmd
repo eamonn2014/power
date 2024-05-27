@@ -86,13 +86,14 @@ Column {.sidebar}
                     div(h5(tags$span(style="color:blue", "\U1D77B 1, enter pop. means"))),    
           value= "2"),)
            
+
           splitLayout(
           textInput("sd1x",    
                     div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter pop. SDs"))),    
           value= "3"),)
           
           
-                 splitLayout(
+          splitLayout(
           textInput("mu2x",    
                     div(h5(tags$span(style="color:blue", "\U1D77B 2, enter pop. means"))),    
           value= "3"),)
@@ -102,26 +103,19 @@ Column {.sidebar}
           textInput("rsdx",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
           value= "1"),)                                
-                        
-          
-                               
-          
-              splitLayout(
+               
+          splitLayout(
           textInput("alphamx", 
                      div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-                    
-                    
-                    
-          value= ".05"), 
-                                       )
+          value= ".05"),  )
               
               
-                 splitLayout(
+          splitLayout(
           textInput("sidemx",
                     div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
           value= "2, 1"),)
               
-                    splitLayout(
+          splitLayout(
           textInput("romx",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
           value= "1,2"),)     
@@ -157,9 +151,7 @@ s22 <- reactive({
     
     Ad<-   (as.numeric(unlist(strsplit(input$rsdx,","))))    # sd ratio
 
-         
-    
-      n= seq(2,input$x_r[2], 2)
+    n= seq(2,input$x_r[2], 2)
       
       
       
@@ -174,65 +166,63 @@ s22 <- reactive({
 
       
       
-side <- ifelse(Ac==1,"one.sided",
-                   ifelse(Ac==2,"two.sided", NA))
-
-
-d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
-
-bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
-bvout <- as.data.frame(bvout)
+  side <- ifelse(Ac==1,"one.sided", ifelse(Ac==2,"two.sided", NA))
+  
+  d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
+  
+  bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
+  bvout <- as.data.frame(bvout)
 
 #apply function to each row    
 
-for( i in 1: dim(d)[1]) {
-  
-  z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
-                           delta=d$mu1[i]-d$mu2[i], 
-                                        alternative=d$side[i],
-                                        sig.level=d$alpha[i])
-  x <- unlist(z)
-  
- 
-  if (length(x) < 10) {x <- c(x[1], NA, x[2:3], NA , x[4:8]) }  #pad when sd ratio and rand ratio change
-  
-  
-  bvout[i,] <- x
-}
+  for( i in 1: dim(d)[1]) {
+    
+    z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
+                             delta=d$mu1[i]-d$mu2[i], 
+                                          alternative=d$side[i],
+                                          sig.level=d$alpha[i])
+    x <- unlist(z)
+    
+   
+    if (length(x) < 10) {x <- c(x[1], NA, x[2:3], NA , x[4:8]) }  #pad when sd ratio and rand ratio change
+    
+    
+    bvout[i,] <- x
+  }
 
-# fil NA 
-bvout[] <- t(apply(bvout, 1, zoo::na.locf))
-
- 
-names(bvout)  <-c("n1", "n2", "delta",  "sigma1", "sigma2", "alpha", "power", "side", "n note" , "note")
-
-bvout$n <- as.numeric(bvout$n1) + as.numeric(bvout$n2)
-bvout$power <- as.numeric(bvout$power)
-
-result <- cbind(bvout, d)
+   # fill NA 
+  bvout[] <- t(apply(bvout, 1, zoo::na.locf))
+  
+   
+  names(bvout)  <-c("n1", "n2", "delta",  "sigma1", "sigma2", "alpha", "power", "side", "n note" , "note")
+  
+  bvout$n <- as.numeric(bvout$n1) + as.numeric(bvout$n2)
+  bvout$power <- as.numeric(bvout$power)
+  
+  result <- cbind(bvout, d)
 
  
 ################text
 
 
-x <- result
-
-txt <- with(x,paste0("~\U1D728( ",mu1,", ",sigma2,")", 
-                     " & ~\U1D728( ",mu2,", ",sigma2,")", 
-                     "\n\U1D7AA= ",alpha, " ",side, ", \nrandomisation ratio=",ratio,"\n"))
-
-
-x$phrase <- txt
-
-x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
-
+  x <- result
   
-
-pow <- x[,c("n","power","phrase","ratio")]
- 
+  txt <- with(x,paste0("~\U1D728( ",mu1,", ",sigma2,")", 
+                       " & ~\U1D728( ",mu2,", ",sigma2,")", 
+                       "\n\U1D7AA= ",alpha, " ",side, ", \nrandomisation ratio=",ratio,"\n"))
+  
+  
+  x$phrase <- txt
+  
+  x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
+  
+    
+  
+  pow <- x[,c("n","power","phrase","ratio")]
+   
      
   #-----------------------------------------------------------------------
-    return(list(  
+  return(list(  
       
       pow=pow
       
@@ -342,7 +332,7 @@ Column {.sidebar}
 
 ```{r tabn}
 
- splitLayout(
+          splitLayout(
           textInput("p1",    div(h5(tags$span(style="color:blue", "\U1D7B9 1..n"))),    
           value= ".222,.323,.455"),)
       
@@ -351,16 +341,14 @@ Column {.sidebar}
 
           splitLayout(
           textInput("or", div(h5(tags$span(style="color:blue", "odds ratios"))), 
-          value= "1.840431"), 
-                                       )
+          value= "1.840431"),       )
           
           splitLayout(
           textInput("alpha", div(h5(tags$span(style="color:blue", "\U1D7AA (type I errors two-sided)"))), 
-          value= "0.025, 0.05"), 
-                                       )
+          value= "0.025, 0.05"),    )
                                          
           splitLayout(
-          textInput("Q",    div(h5(tags$span(style="color:blue", "ratios for unequal randomisation \n (1 for equal randomisation)"))),   
+          textInput("Q", div(h5(tags$span(style="color:blue", "ratios for unequal randomisation \n (1 for equal randomisation)"))),   
           value= "0.5, 1"),)                                
                                         
           sliderInput('x_rangepo', 'Plot x-range', value = c(0,800),
@@ -424,9 +412,6 @@ Column {.sidebar}
  
  })
        
- 
- 
- 
   
 
 ```
@@ -449,28 +434,21 @@ renderPlot({
   skips <- ifelse(input$x_rangepo[2] <= 1000, 50,
            ifelse(input$x_rangepo[2] > 1000 & input$x_rangepo[2] < 3000 ,200
                        ,  500))
-
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
  
-  # p$tag <- substring( p$tag, 2)
- 
-  # legendlabels <- data.frame(
-  #                   'stadtland'= unique(p$tag),
-  #                   stringsAsFactors=FALSE)
 
    p <- p[,c(  "n" , "alpha",   "power",   "frac", "or" ,"tag")]
    names(p)  <-    c( "n" , "alpha",   "power",   "ratio", "variable", "tag")
   #-----------------------------------------------------------------------
    
-    p <- as.data.frame(p)
+   p <- as.data.frame(p)
    p$ratio <- factor(p$ratio)
    p$variable <- factor(p$variable)
   
   all <- ggplot(p, aes(x = n, y = power, 
-                  # linetype=ratio,
+                
                     group = interaction(ratio, variable, alpha),
                      
-                    colour = tag)) + # # had hr here initally mis match with legend
+                    colour = tag)) +  
   geom_line() +
  
   scale_y_continuous(breaks = 
@@ -707,23 +685,10 @@ print(all)
   
   d2<- DT::formatRound(d2, columns=namez  , digits=3)
   
-  d2
-  
-  
-  
+  d2 
   
 })  
-     
-
-
-
-
-
-
-
-
-
-
+      
 
 
 
@@ -742,8 +707,7 @@ print(all)
 
 renderPlot({
   
-    #or  <- por()$or
-    
+     
     kp <- por()$P
 
     kx <- 1:length(kp)
@@ -770,12 +734,6 @@ renderPlot({
 
 PO simulation
 ===
-
-```{r, posim}
-
-
- 
-```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
@@ -855,12 +813,9 @@ Column {.sidebar}
               p1 <- 1/(Q+1) 
         
               p2 <- 1- p1 
-
+                # treatment indicator
               trt <- sample(x=c(0, 1), size=n, prob=c(p2, p1) , replace=TRUE)
-              
-              # treatment indicator
-              #trt <- sample(x=c(0, 1), size=n, prob=c(1-Q, Q) , replace=TRUE)
-                
+               
               #------------------------------------------
               # get the cum log odds p1/p2+p3+p4+p5 , p1+p2 / p3+p4+p5 ....
               lo <- c()
@@ -908,20 +863,13 @@ Column {.sidebar}
            out <- replicate(ss, POsim(P =P, n=N, beta_trt=log(or), Q=Q ) )
            pvalue <- mean( out <= sig.level )  #  power
            #-------------------------------------------------------------------------
-      
-           # 2 Now harrell's function, collect the power
-          # n2 <- round( N * Q )
-           #n1 <- N - n2 
-           
+    
            
             n1 <- round(1/(Q+1) * N)
         
             n2 <- N- n1 
 
-           
-           
-           
-           harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
+            harrell <-  Hmisc::popower(p=P, odds.ratio=or, n1=n1, n2=n2,  alpha=sig.level )[[1]]
     
            
      return(list(  
@@ -1059,44 +1007,8 @@ br()
        "."))
 
  })
-# proportional e↵ect of treatment across the scale of the ordinal outcome
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# proportional effect of treatment across the scale of the ordinal outcome
  
-
 
 ``` 
 
@@ -1129,11 +1041,11 @@ Column {.sidebar}
           textInput("p2_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
           value= "0.2,.3,.1,.1,.3"),  )
           
-            splitLayout(
+          splitLayout(
           textInput("p3_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
           value= " 0.02588235, 0.02823529, 0.33764706, 0.36411765, 0.24411765,"),  )
             
-              splitLayout(
+          splitLayout(
           textInput("p4_nopo", div(h5(tags$span(style="color:blue", "Trt proportion(s) \U1D7B9 1..n"))), 
           value= "0.02823529, 0.02588235, 0.36411765,  0.33764706,0.24411765,"),  )
           
@@ -1191,27 +1103,23 @@ Column {.sidebar}
    
  por_NOPO <- reactive({
   
- A <-   sig.level <-   (as.numeric(unlist(strsplit(input$alpha_nopo,","))))    
-         Q         <-   (as.numeric(unlist(strsplit(input$Q_nopo,"," ))))    # fraction
+ A <-   sig.level <-    (as.numeric(unlist(strsplit(input$alpha_nopo,","))))    
+         Q         <-   (as.numeric(unlist(strsplit(input$Q_nopo,   "," ))))    # fraction
       side         <-   (as.numeric(unlist(strsplit(input$side_nopo,"," ))))
-         p1         <-  ( input$p1_nopo)    
-         p2        <-   (input$p2_nopo )
-         p3         <-  ( input$p3_nopo)    
-         p4        <-   (input$p4_nopo )
+         p1         <-  (input$p1_nopo)    
+         p2        <-   (input$p2_nopo)
+         p3         <-  (input$p3_nopo)    
+         p4        <-   (input$p4_nopo)
         
         n= seq(2,input$x_range_nopo[2], 2)
-
-    #    d <- tidyr::expand_grid(p1 = p1, p2=p2, alpha=A, frac =Q, n=n , side=side)
-        
+ 
         #new
-       d <- tidyr::expand_grid(p1 = p1, p2=p2,  p3=p3, p4=p4,alpha=A, frac =Q, n=n , side=side)
+        d <- tidyr::expand_grid(p1 = p1, p2=p2,  p3=p3, p4=p4,alpha=A, frac =Q, n=n , side=side)
         d$n1 <- round(d$n*d$frac  )
         
         d$n2 <- d$n - d$n1 
-        
-        #d$id <- 1:dim(d)[1]
-        #d$n1 <-d$n2 <- NULL
-         L <- reshape2::melt(d,  id.vars=c("n", "alpha", "frac","side","p1"),
+      
+        L <- reshape2::melt(d,  id.vars=c("n", "alpha", "frac","side","p1"),
            measure.vars=c("p2","p3","p4") )
          
          
@@ -1314,17 +1222,7 @@ renderPlot({
   skips <- ifelse(input$x_range_nopo[2] <= 1000, 50,
            ifelse(input$x_range_nopo[2] > 1000 & input$x_range_nopo[2] < 3000 ,200
                        ,  500))
-
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
  
-  # p$tag <- substring( p$tag, 2)
- 
-  # legendlabels <- data.frame(
-  #                   'stadtland'= unique(p$tag),
-  #                   stringsAsFactors=FALSE)
-
-  # p <- p[,c(  "n" , "alpha",   "power",   "frac", "or" ,"tag")]
-  # names(p)  <-    c( "n" , "alpha",   "power",   "ratio", "variable", "tag")
   #-----------------------------------------------------------------------
    
   p <- as.data.frame(p)
@@ -1333,13 +1231,11 @@ renderPlot({
   p$alpha <- factor(p$alpha)
   p$side <-    factor(p$side)
   all <- ggplot(p, aes(x = n, y = power, 
-                  # linetype=ratio,
-                   group = interaction(ratio, value, alpha, side),
-                   # group = ( value),
-                     
+                    group = interaction(ratio, value, alpha, side),
+                      
                    colour = Scenario
                   
-                  )) + # # had hr here initally mis match with legend
+                  )) +  
   geom_line() +
  
   scale_y_continuous(breaks = 
@@ -1395,12 +1291,7 @@ print(all)
  })
  
   
- 
-
-
-
-
- 
+  
 
  
 ```
@@ -1434,20 +1325,7 @@ print(all)
       d1
 })
 
- 
-
-
-
-
-
-
-
-
-
-
-    
-      
-
+  
 ``` 
 
 
@@ -1469,23 +1347,22 @@ Column {.sidebar}
   
           splitLayout(
           textInput("hrs_surv2",    
-                    div(h5(tags$span(style="color:blue", "hazard ratio"))),    
+          div(h5(tags$span(style="color:blue", "hazard ratio"))),    
           value= "2,1.5"),)
 
-         splitLayout(
+          splitLayout(
           textInput("alphas_surv2", 
-                    div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05"), 
-                                       )
+          div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"), )
            
           splitLayout(
           textInput("sidess_surv2",    
-                    div(h5(tags$span(style="color:blue", "one or two sided"))),    
+          div(h5(tags$span(style="color:blue", "one or two sided"))),    
           value= "2"),)
                                          
           splitLayout(
           textInput("ros_surv2",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
+          div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
           value= "1"),)                                
                                         
           sliderInput('x_ranges_surv2', 'Plot x-range', value = c(0,400),
@@ -1610,25 +1487,16 @@ renderPlot({
   skips <- ifelse(input$x_ranges_surv2[2] <= 1000, 50,
            ifelse(input$x_ranges_surv2[2] > 1000 & input$x_ranges_surv2[2] < 3000 ,200,  500))
 
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
-  # legendlabels <- data.frame(
-  #                   'stadtland'= unique(p$tag),
-  #                   stringsAsFactors=FALSE)
-  # 
-  #  p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",   "ratio", 
-  # "variable")]
+ 
   #-----------------------------------------------------------------------
  
   all <- ggplot(p, aes(x = n, y = power, 
-                #    linetype=ratio,
+                
                  group = interaction(hr, alpha, ratio, sided),
-                    
-                   # group=variable,
+              
                     colour = phrase)) + # # had hr here initally mis match with legend
   geom_line() +
-
-  # scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
-  #                       values = c("red", "green", "blue", "purple","black","orange")) +
+ 
  
   scale_y_continuous(breaks = seq(input$y_ranges_surv2[1], input$y_ranges_surv2[2], by = 0.1),
                        limits = c(input$y_ranges_surv2[1], input$y_ranges_surv2[2])) +
@@ -1686,23 +1554,7 @@ print(all)
 
 ```
       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 ``` 
 
@@ -1710,15 +1562,7 @@ print(all)
 Binary endpoint
 ===
 
-```{r, newbin}
-
-
  
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# start of app
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
-```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
@@ -1863,32 +1707,7 @@ print(all)
  })
     
       
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
@@ -1896,15 +1715,9 @@ print(all)
 
 ``` 
 
-
 Three arm trial (continuous and binary) with figure
 ===
 
-```{r, threearm2}
-
-
- 
-```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
@@ -1932,11 +1745,6 @@ Column {.sidebar}
           splitLayout(
           textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
           value= "500"),)                                
-                             
-                
-          # splitLayout(
-          # textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
-          # value= "40"),)        
           
           sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
                   min = 0, max = 5000,step=100,ticks=F)
@@ -1999,11 +1807,11 @@ Column {.sidebar}
   
   structure (list( 
        P1=P1,
-     P2=P2,
-   P3=P3 ,
-     P4=P4 ,
-     P5=P5 ,
-    P6=P6 
+       P2=P2,
+       P3=P3,
+       P4=P4,
+       P5=P5,
+       P6=P6 
   ))  
   
 }
@@ -2014,12 +1822,11 @@ Column {.sidebar}
           
  threearmx <- reactive({
   
-        sig.level <-   (as.numeric(unlist(strsplit(input$alphas2,","))))    
-        mus         <-   (as.numeric(unlist(strsplit(input$mus2   ,","))))    
-        link         <-   (as.numeric(unlist(strsplit(input$link2    ,","))))    # fraction
-        sds        <-   (as.numeric(unlist(strsplit(input$sds2   ,","))))   
+        sig.level <-   (as.numeric(unlist(strsplit(input$alphas2 ,","))))    
+        mus       <-   (as.numeric(unlist(strsplit(input$mus2    ,","))))    
+        link      <-   (as.numeric(unlist(strsplit(input$link2   ,","))))     
+        sds       <-   (as.numeric(unlist(strsplit(input$sds2    ,","))))   
         ss        <-   (as.numeric(unlist(strsplit(input$ss12    ,","))))
-      #  N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
 #---------------------------------------------------------------------------------------------------
           n= seq(2,input$x_rangepo2[2], 2)
         
@@ -2044,8 +1851,8 @@ Column {.sidebar}
        
         result <- cbind(bvout, d)
       
-        names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", "at least 1", "mu1", "mu2", "mu3", "sigma0", 
-"sigma1", "sigma2", "alpha", "out.var", "n")
+        names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
+                           "at least 1", "mu1", "mu2", "mu3", "sigma0", "sigma1", "sigma2", "alpha", "out.var", "n")
  
      x <- result
 
@@ -2179,35 +1986,12 @@ print(all)
  
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ``` 
 
 
 Three arm trial (continuous and binary)
 ===
 
-```{r, threearm}
-
-
- 
-```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
@@ -2395,43 +2179,7 @@ br()
 
  })
  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-      
-      
-      
-      
-          
-          
+ 
 
    
 ```

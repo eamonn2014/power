@@ -1744,11 +1744,11 @@ Column {.sidebar}
  threearm <- reactive({
   
         sig.level <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
-        mus         <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
-        link         <-   (as.numeric(unlist(strsplit(input$link    ,","))))    # fraction
-        sds        <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
-        ss        <-   (as.numeric(unlist(strsplit(input$ss1    ,","))))
-        N         <-   (as.numeric(unlist(strsplit(input$N1     ,","))))
+        mus       <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
+        link      <-   (as.numeric(unlist(strsplit(input$link  ,","))))    # fraction
+        sds       <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
+        ss        <-   (as.numeric(unlist(strsplit(input$ss1   ,","))))
+        N         <-   (as.numeric(unlist(strsplit(input$N1    ,","))))
 #------------------------------------------------------------------------------------------------------------  
       
       
@@ -1891,26 +1891,6 @@ br()
 
  })
  
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ``` 
@@ -1957,7 +1937,7 @@ Column {.sidebar}
           # textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
           # value= "40"),)        
           
-  sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
+          sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
                   min = 0, max = 5000,step=100,ticks=F)
           
           sliderInput('y_rangepo2', 'Plot y-range', value = c(0,1),
@@ -3169,7 +3149,7 @@ eamonn <- function (hr = 0.6, alpha = 0.025, beta = 0.1, ratio = 1, sided = 1,
  
       
       x<-d
-      x$phrase <- with(x, paste("hr =",x$hr,",\U1D7AA=",x$alpha, ", ratio=",x$ratio, ", sided=",x$sided))
+      x$phrase <- with(x, paste("hr =",x$hr,", \U1D7AA=",x$alpha, ", ratio=",x$ratio, ", sided=",x$sided))
      
       return(list(res=x
       

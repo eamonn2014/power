@@ -9,9 +9,10 @@ output:
     source_code: embed
 runtime: shiny
 ---
-Binary endpoint
-===
-
+ 
+ 
+ 
+ 
 ```{r global, include=FALSE}
 
   rm(list=ls())
@@ -57,826 +58,223 @@ Binary endpoint
   }
   
  
- 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # start of app
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
-
-```{r tab1}
-
-  
-       
-  
-          splitLayout(
-          textInput("p1_z",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 1"))),    
-          value= "0.2,0.25,0.35,0.2,0.25,0.35"),)
-           
-          splitLayout(
-          textInput("p2_z",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 2"))),    
-          value= "0.1,0.15,0.25,0.15,0.2,0.3"),)
-          
-          splitLayout(
-          textInput("alpha_z", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
-                                       )
-          splitLayout(
-          textInput("ro_z",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1,1,1,1,1,1"),)                                
-                                        
-          sliderInput('x_range_z', 'Plot x-range', value = c(0,800),
-                  min = 0, max = 5000,step=100,ticks=F)
-          
-          sliderInput('y_range_z', 'Plot y-range', value = c(0,1),
-                  min = 0, max = 1, step=.05,ticks=F)
-
-   
-          br()
-   
-          
-                 
-xx <- reactive({
-  
-    A <-   (as.numeric(unlist(strsplit(input$alpha_z,","))))    
-    Az<-   (as.numeric(unlist(strsplit(input$p1_z,","))))    
-    Aa<-   (as.numeric(unlist(strsplit(input$p2_z,","))))    
-    Ab<-   (as.numeric(unlist(strsplit(input$ro_z,","))))    
- 
-    for (i in 1:6) {
-          assign(paste0("A", i),      A[i])
-          assign(paste0("P", i),     Az[i])    
-          assign(paste0("P", i,"B"), Aa[i])
-          assign(paste0("R", i),     Ab[i])
-          }
-
-    
-   sample_sizes <- seq(10, input$x_range_z[2], by = 10)
-   # 
-   #---------------------------------------------------------------
-   #  trying to get n1 n2 ...etc and power to list, inefficient as I do the calc again!
-   
-    s = length(sample_sizes)
- 
-    res = matrix(NA, 6*s, 9)
-   
-    x <- s*6
-      
-    ind <- 1
-
-    #-----------------------------------------------------------------------  
-      
-    for (j in 1:s) {
-   
-        for(i in 1:6) {
-   
-                   res[ind,1] <- i     # group 
-                   res[ind,2] <- sample_sizes[j]  # total sample size
-            n1 <-  res[ind,3] <- sample_sizes[j]/((eval(parse(text = paste0("R",(i)))))+1)  # n1
-            n2 <-  res[ind,4] <- eval(parse(text = paste0("R",(i))))* sample_sizes[j]/
-                                (eval(parse(text = paste0("R",(i))))+1)    # n2
-            r <-   res[ind,5] <-(eval(parse(text = paste0("R",(i)))))      # ratio
-            p1 <-  res[ind,6] <-(eval(parse(text = paste0("P",(i)))))      # p1
-            p2 <-  res[ind,7] <-(eval(parse(text = paste0("P",(i),"B"))))  # p2
-            a1 <-  res[ind,8] <-(eval(parse(text = paste0("A",(i)))))      # alpha
-    
-                  # do the calculation, feed in Hmisc function
-                   res[ind,9]  <- bpower(n1 = n1, 
-                                         n2 =n2, p1 = p1, p2 =  p2, alpha = a1)
-      
-            ind=ind+1
-   
-    }
-  }
-      
-  #-----------------------------------------------------------------------    
-      res<- data.frame(res)
-      names(res) <- c("Index", "N","n1","n2","ratio", "P1","P2", "alpha","power")
-      res <- plyr::arrange(res,Index ,N)
-      res$n1 <- round(res$n1,2)
-      res$n2 <- round(res$n2,2)
-      res$power <- round(res$power,4)
-  #-------------------------------------------------------
-  # code to help with legend
- 
-      x <- res
-    
-      x$phrase <- with(x, paste(": \U1D7B9 1=",x$P1,", \U1D7B9 2=",x$P2,"\n\U1D7AA=",x$alpha, ", ratio=",x$ratio))
-    
-      x$r <- ifelse(x$ratio !=1,"Unequal","Equal")  
-    
-      x$variable <- rep(1:6, each=length(sample_sizes)) 
-    
-      x$variable <- x$Index
-        
-      x$variable <- factor(x$variable)
-    
-      x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-
-  #-----------------------------------------------------------------------
-    return(list(  
-      
-      x=x , res=res
-      
-     ))    
-
-})
-
- 
-```
-
-$\alpha$ type I assertion error $\beta$ not required
-
-<!-- Column {data-width=600, height=600} -->
-<!-- ----------------------------------------------------------------------- -->
-<!-- ### Chart 1 -->
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 1
-
-```{r tab1 plot1}
-
-renderPlot({
-  
-  p =      xx()$x
-  
-  p <- p[complete.cases(p), ]
-  
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_range_z[2] <= 1000, 50,
-           ifelse(input$x_range_z[2] >  1000 & input$x_range_z[2] < 3000 ,200, 500))
-   
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
-  legendlabels <- data.frame(
-                    'stadtland'= unique(p$tag),
-                    stringsAsFactors=FALSE)
-
-  #-----------------------------------------------------------------------
-  
-  all <-ggplot(p, aes(x = N, y = power, linetype=r,
-                    group=variable,
-                    colour = variable)) +
-  geom_line() +
-    
-    scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
-                        values = c("red", "green", "blue", "purple","black","orange")) +
-
-  scale_y_continuous(breaks = seq(input$y_range_z[1], input$y_range_z[2], by = 0.1),
-                     limits =   c(input$y_range_z[1], input$y_range_z[2])) +
-  scale_x_continuous(breaks = seq(input$x_range_z[1], input$x_range_z[2], skips),
-                     limits =   c(input$x_range_z[1], input$x_range_z[2])) +
-    
-  # scale_y_continuous(breaks = seq( y_range_z[1], y_range_z[2], by = 0.1),  
-  #                  limits =   c( y_range_z[1],  y_range_z[2])) +
-  #   scale_x_continuous(breaks = seq( x_range_Z[1],  x_range_z[2], skips), 
-  #                      limits =   c( x_range_z[1],  x_range_z[2])) +  
-    
-  theme_bw() +
-  theme( 
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-     
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-    
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-   
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-    
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
   
   
-  labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio" )+
-  labs(caption = paste("- Ratio, see legend,less than 1, n2 is the smaller group.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
-  ggtitle(paste0("Power (or sample size) for difference in two proportions") ) 
 
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
-  #-----------------------------------------------------------------------
-#ggplotly(all)
- })
- 
-```
-
-### Listing
-
-```{r listing}
- 
- DT::renderDataTable({
-
-    w1 <-  xx()$res
-    
-    DT::datatable(w1, rownames=FALSE,
-                  plugins = 'natural',
-                  options = list(
-                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
-                  ))
-})
-  
- 
-``` 
-
-
-Survival
-====
-```{r, survival}
-
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
-
-```{r surv1}
-
-  
-    
-  
-          splitLayout(
-          textInput("hrs",    
-                    div(h5(tags$span(style="color:blue", "hazard ratio"))),    
-          value= "2,1.5,0.9,2,1.5,0.9"),)
-
-         splitLayout(
-          textInput("alphas", 
-                    div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05, 0.05,0.05, 0.05,0.05, 0.05"), 
-                                       )
-           
-          splitLayout(
-          textInput("sidess",    
-                    div(h5(tags$span(style="color:blue", "one or two sided"))),    
-          value= "2,2,2,1,1,1"),)
-                                         
-          splitLayout(
-          textInput("ros",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1,2,3,1,2,3"),)                                
-                                        
-          sliderInput('x_ranges', 'Plot x-range', value = c(0,400),
-                  min = 0, max = 5000,step=100,ticks=F)
-          
-          sliderInput('y_ranges', 'Plot y-range', value = c(0,1),
-                  min = 0, max = 1,step=.05,ticks=F)
-
-   
-          br()
-          
-          
-       # hrs = c("2,1.5,0.9,2,1.5,0.9")
-       # 
-       #   alphas = c("0.05, 0.05,0.05, 0.05,0.05, 0.05")
-       #                                 
-       #    sidess = c("2,2,2,1,1,1")
-       #                                   
-       #     ros = c("1,2,3,1,2,3")                              
-       #                                  
-       #     x_ranges  = c(0,400) 
-       #    
-       #    y_ranges = c(0,1) 
-          
-    #           A <-   (as.numeric(unlist(strsplit(alphas,","))))    
-    # realHR <- Az<-   (as.numeric(unlist(strsplit(hrs,","))))    
-    # Aa<-   (as.numeric(unlist(strsplit(sidess,","))))    
-    # Ab<-   (as.numeric(unlist(strsplit(ros,","))))    
-    
-
-          
-          
-          
-                
-s1 <- reactive({
-  
-# function adapted from gsDesign::nEvents--------------------------------------------------------------------------
-
-    fsupower <- function (hr = NA, alpha = 0.025,
-                      beta = 0.1, ratio = 1, sided = 1, hr0 = 1, n = 0 )
-{
-   
-      # if (sided != 1 && sided != 2) {sided=NA} # using this springs an error and crashes plot
-             
-        c <- sqrt(ratio)/(1 + ratio)
-       
-        # new code so graph is shown if a hr is missing from the 6 entries allowed
-        if(is.na(hr) | is.na(sided)) { 
-          
-          hr=NA; pwr=NA; delta=0; se=0; sided=NA; alpha=NA; hr0=NA; ratio=NA
-           
-          
-        } else {
-        
-          if (sided != 1 && sided != 2) {sided=NA}
-          # my fix for the hr > 1 behavior
-          
-          if(hr>1) {
-          delta <- -c * -(log(hr) - log(hr0))
-          } else {
-          delta <- -c * (log(hr) - log(hr0))
-          }
-        
-        pwr <- stats::pnorm(-(stats::qnorm(1 - alpha/sided) - sqrt(n) * delta))#
-        
-        }
-                pwr <- data.frame(cbind(hr = hr, n = n, alpha = alpha, 
-                sided = sided, beta = 1 - pwr, Power = pwr, delta = delta, 
-                ratio = ratio, hr0 = hr0, se = sqrt(1/n)/c))
-        
-                return(pwr)
- 
-    }
-    
-    #----------------------------------------------------------------------------------------------
-    
-    A <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
-    realHR <- Az<-   (as.numeric(unlist(strsplit(input$hrs,","))))    
-    Aa<-   (as.numeric(unlist(strsplit(input$sidess,","))))    
-    Ab<-   (as.numeric(unlist(strsplit(input$ros,","))))    
-    
-
-    
-        for (i in 1:6) {
-          assign(paste0("A", i), A[i])
-          assign(paste0("P", i), realHR[i])    
-          assign(paste0("P", i,"B"), Aa[i])
-          assign(paste0("R", i), Ab[i])
-          }
-
-
-               
-    sample_sizes <- seq(10, input$x_ranges[2], by = 10)
-     
-    A <- fsupower(hr = P1, n = sample_sizes,   alpha=A1, sided =P1B, ratio =R1)
-    B <- fsupower(hr = P2, n = sample_sizes,   alpha=A2, sided =P2B, ratio =R2)
-    C <- fsupower(hr = P3, n = sample_sizes,   alpha=A3, sided =P3B, ratio =R3)
-    D <- fsupower(hr = P4, n = sample_sizes,   alpha=A4, sided =P4B, ratio =R4)
-    E <- fsupower(hr = P5, n = sample_sizes,   alpha=A5, sided =P5B, ratio =R5)
-    F <- fsupower(hr = P6, n = sample_sizes,   alpha=A6, sided =P6B, ratio =R6)
-
-  #---------------------------------------------------------------
-  
-      x <- rbind(A,B,C,D, E, F)
-  
-      x$n2 <- x$n / (x$ratio + 1)
-      x$n1 <- x$ratio * x$n2
-      x$hr <- factor(x$hr)
-  
-      res <- x
-      res <- data.frame(res)
-      res$n1 <- round(res$n1,2)
-      res$n2 <- round(res$n2,2)
-      res$Power <- round(res$Power,4)
-      
-  # #-------------------------------------------------------
-  # code to help with legend
-
-      x <- res
-
-      x$phrase <- with(x, paste(": HR=",x$hr, "ratio=",x$ratio, "\n\U1D7AA=",x$alpha, "sided=",x$sided) )
-      
-      x$ratio <- ifelse(x$ratio !=1,"Unequal","Equal")
-
-      x$variable <- rep(1:6, each=length(sample_sizes))
-
-      x$variable <- factor(x$variable)
-
-      x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-
-      x$ratio <- factor(x$ratio)
-  #-----------------------------------------------------------------------
-    return(list(  
-      
-      xy=x 
-      
-     ))    
-
-})
-
-```
-$\alpha$ type I assertion error $\beta$ not required
- 
-<!-- ### Chart 1 -->
-
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 2
-
-```{r surv plot1, eval=TRUE}
-
-
-renderPlot({
-  
- p =      s1()$xy
- 
- 
- p <- p[complete.cases(p), ]
-  
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_ranges[2] <= 1000, 50,
-           ifelse(input$x_ranges[2] > 1000 & input$x_ranges[2] < 3000 ,200,  500))
-
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
-  legendlabels <- data.frame(
-                    'stadtland'= unique(p$tag),
-                    stringsAsFactors=FALSE)
-
-   p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",   "ratio", 
-  "variable")]
-  #-----------------------------------------------------------------------
- 
-  all <- ggplot(p, aes(x = n, y = Power, 
-                    linetype=ratio,
-                    #group = interaction(ratio, hr),
-                    
-                    group=variable,
-                    colour = variable)) + # # had hr here initally mis match with legend
-  geom_line() +
-
-  scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
-                        values = c("red", "green", "blue", "purple","black","orange")) +
- 
-  scale_y_continuous(breaks = seq(input$y_ranges[1], input$y_ranges[2], by = 0.1),
-                       limits = c(input$y_ranges[1], input$y_ranges[2])) +
-     
-  scale_x_continuous(breaks = seq(input$x_ranges[1], input$x_ranges[2], skips), 
-                     limits =   c(input$x_ranges[1], input$x_ranges[2])) +
-     
-  theme_bw() +
-  theme(
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
-
-
-  #-----------------------------------------------------------------------
-
-  labs(y="Power", x = 'Total number of events', color = "Hazard ratio", linetype="Ratio" )+
- 
-  labs(caption = paste("- Alpha the type I assertion probability.  Note, total number of patients requires information on accrual duration and maximum follow up times. If ratio <1 n1 is the smaller group. \n- Uses method of Schoenfeld two-sided test for the ratio of two hazards. Assuming exponential hazards.\n- Schoenfeld DA. Sample-size formula for the proportional-hazards regression model. Biometrics 1983;39:499-503.\n" )) +
-
-  ggtitle(paste0(" Power (or number of events) for hazard ratio assuming exponential hazards") )
-
-
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
-#-----------------------------------------------------------
-#ggplotly(all)
- })
- 
-```
-
-### Listing
-
-
-```{r listings2}
-
-
- DT::renderDataTable({
-
-    p <-  s1()$xy
-    
-       p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
-    DT::datatable(p, rownames=FALSE,
-                  plugins = 'natural',
-                  options = list(
-                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
-                  ))
-})
-  
- 
 
 ``` 
 
-Continuous
+Continuous endpoint
 ====
-```{r, cont}
-
-```
+ 
 
 Column {.sidebar}
 -----------------------------------------------------------------------
 
 
-**Enter parameters of interest separated by a comma. Up to six scenarios at once can be evaluated**
+**Enter parameters of interest separated by a comma**
 
 ```{r}
 
  
   
           splitLayout(
-          textInput("mu1",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter up to 6 pop. means"))),    
-          value= "1, 1, 2, 2, 1 , 1"),)
+          textInput("mu1x",    
+                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter pop. means"))),    
+          value= "2"),)
            
           splitLayout(
-          textInput("sd1",    
-                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter up to 6 pop.   SDs"))),    
-          value= "3, 3, 3, 3, 3, 3"),)
+          textInput("sd1x",    
+                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter pop. SDs"))),    
+          value= "3"),)
           
           
                  splitLayout(
-          textInput("mu2",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter up to 6 pop. means"))),    
-          value= "2, 2, 1, 1, 3.1, 3"),)
+          textInput("mu2x",    
+                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter pop. means"))),    
+          value= "3"),)
                  
                  
                         splitLayout(
-          textInput("rsd",    
+          textInput("rsdx",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
-          value= "1, 1, 1, 1, 1, 1"),)                                
+          value= "1"),)                                
                         
           
                                
           
               splitLayout(
-          textInput("alpham", 
+          textInput("alphamx", 
                      div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
                     
                     
                     
-          value= ".05, .025, .05, .025, .05, .025"), 
+          value= ".05"), 
                                        )
               
               
                  splitLayout(
-          textInput("sidem",
+          textInput("sidemx",
                     div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
-          value= "2, 1, 2, 1, 2, 1"),)
+          value= "2, 1"),)
               
                     splitLayout(
-          textInput("rom",    
+          textInput("romx",    
                     div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1, 1, 1, 1, 1, 1"),)     
+          value= "1,2"),)     
                     
        
 
                                         
-          sliderInput('x_rangem', 'Plot x-range', value = c(0,400),
+          sliderInput('x_r', 'Plot x-range', value = c(0,400),
                   min = 0, max = 5000,step=100,ticks=F)
           
-          sliderInput('y_rangem', 'Plot y-range', value = c(0,1),
+          sliderInput('y_r', 'Plot y-range', value = c(0,1),
                   min = 0, max = 1,step=.05,ticks=F)
 
    
           br()
        
                 
-s2 <- reactive({
+s22 <- reactive({
   
 # function adapted from gsDesign::nEvents--------------------------------------------------------------------------
   
-    A <-   (as.numeric(unlist(strsplit(input$alpham,","))))    
+    A <-   (as.numeric(unlist(strsplit(input$alphamx,","))))    #alpha
 
-    Az <-   (as.numeric(unlist(strsplit(input$mu1,","))))    
+    Az <-   (as.numeric(unlist(strsplit(input$mu1x,","))))    # mean1
     
-    Aa<-   (as.numeric(unlist(strsplit(input$sd1,","))))    
+    Aa<-   (as.numeric(unlist(strsplit(input$sd1x,","))))    # sd
     
-    m2 <-   (as.numeric(unlist(strsplit(input$mu2,","))))    
+    m2 <-   (as.numeric(unlist(strsplit(input$mu2x,","))))    # mean 2
 
-    Ac<-   (as.numeric(unlist(strsplit(input$sidem,","))))
+    Ac<-   (as.numeric(unlist(strsplit(input$sidemx,","))))  # one or two sided
 
-    Ab<-   (as.numeric(unlist(strsplit(input$rom,","))))    
+    Ab<-   (as.numeric(unlist(strsplit(input$romx,","))))    # randomisation
     
-    Ad<-   (as.numeric(unlist(strsplit(input$rsd,","))))    
+    Ad<-   (as.numeric(unlist(strsplit(input$rsdx,","))))    # sd ratio
 
-            for (i in 1:6) {
-                assign(paste0("A", i), A[i])      # alpha
-                assign(paste0("M", i), Az[i])     # mu1
-                assign(paste0("sd", i), Aa[i])    # sd1
-                assign(paste0("M", i,"a"), m2[i]) # m2
-                assign(paste0("s", i), Ac[i])     # one or two side
-                assign(paste0("R", i), Ab[i])     # rand ratio
-                assign(paste0("rsd", i), Ad[i])   # ratio sd
-          }
+         
     
-    
-    
-     
-    
-    
-    
-    
-    
-    
-    
-    
-     #-----------------------------------------------------------------------
-
-    n= seq(3,input$x_rangem[2], 2)
-
-
-
-res = matrix(NA, length(n), 10)
-
-sofamean2 <- function(u0, u1, sd, ratio=1 , sdr=1, alternative=1, sig.level){
-  
-  for (i in 1: length(n)) {
-    
-    # trying to circumvent error on power_t_test if these inputs  are not there
-    # rows with NA are dropped later
-     
-    if (is.na(sdr) | is.na(alternative) | is.na(sig.level) |is.na(ratio) 
-      | is.na(u0)     | is.na(u1)             )
-       
-       {
-      # delta set to NA  
+      n= seq(2,input$x_r[2], 2)
       
       
       
-    zz <- MESS::power_t_test(n=99, sd=1, power=NULL, ratio=1, sd.ratio=1, delta=NA, alternative="one.sided",
-                             sig.level=0.05)
-    
-    
-    zz$n[2] <- ifelse(is.na(zz$n[2]),   zz$n[1], zz$n[2])
-   zz$sd[2] <- ifelse(is.na(zz$sd[2]), zz$sd[1], zz$sd[2])
-   
-        }  else {
-    #-------------------------------------------------------------------------------
-           
-    side <- ifelse(alternative==1,"one.sided",
-                   ifelse(alternative==2,"two.sided", NA))
-    
-      # circumenventing...
-      if (u0-u1 < 0 & side=="one.sided") { 
-        A=u0
-        B=u1
-        u0 = B
-        u1 = A}
-    
-    
-    zz <- MESS::power_t_test(n=n[i], sd=sd, power=NULL, ratio=ratio, sd.ratio=sdr, delta=u0-u1, alternative=side,
-                             sig.level=sig.level)
-    
-    
-    zz$n[2] <- ifelse(is.na(zz$n[2]),   zz$n[1], zz$n[2])
-   zz$sd[2] <- ifelse(is.na(zz$sd[2]), zz$sd[1], zz$sd[2])
-   
-   
-   
-        }
-    
-    res[i,] <- c( u0, u1 , round(zz$power,3), zz$n[1], zz$n[2],zz$sd[1], zz$sd[2], zz$sig.level, zz$alternative, ratio)
-    
-  }
+# hard code for testing
+    #  n <- seq(2,200,2)
+# Az <-  c(1,2)   # mean 1
+# m2 <-   c(2,3)  # mean2
+# A <-   c(.05,.025)   # alpha
+# Aa<-   c(2,2)    # rand ratio
+# Ab<-   c(1,2)   #sd ratio and rand ratio
+# Ac<-   c(1,2) # ssigma 
+
+      
+      
+side <- ifelse(Ac==1,"one.sided",
+                   ifelse(Ac==2,"two.sided", NA))
+
+
+d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
+
+bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
+bvout <- as.data.frame(bvout)
+
+#apply function to each row    
+
+for( i in 1: dim(d)[1]) {
+  
+  z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
+                           delta=d$mu1[i]-d$mu2[i], 
+                                        alternative=d$side[i],
+                                        sig.level=d$alpha[i])
+  x <- unlist(z)
+  
+ 
+  if (length(x) < 10) {x <- c(x[1], NA, x[2:3], NA , x[4:8]) }  #pad when sd ratio and rand ratio change
   
   
-  res <- data.frame(res)
-  names(res) <- c( "mu1", "mu2","power" , "n1", "n2", "sd1", "sd2","alpha","sided", "ratio")
-  return(res)
-  
-  
+  bvout[i,] <- x
 }
 
+# fil NA 
+bvout[] <- t(apply(bvout, 1, zoo::na.locf))
 
-A <-  sofamean2(u0=M1, u1=M1a, sd=sd1,   ratio=R1, sdr=rsd1, alternative=s1, sig.level =A1 )
-B <-  sofamean2(u0=M2, u1=M2a, sd=sd2,   ratio=R2, sdr=rsd2, alternative=s2, sig.level =A2 )
-C <-  sofamean2(u0=M3, u1=M3a, sd=sd3,   ratio=R3, sdr=rsd3, alternative=s3, sig.level =A3 )
-D <-  sofamean2(u0=M4, u1=M4a, sd=sd4,   ratio=R4, sdr=rsd4, alternative=s4, sig.level =A4 )
-E <-  sofamean2(u0=M5, u1=M5a, sd=sd5,   ratio=R5, sdr=rsd5, alternative=s5, sig.level =A5 )
-F <-  sofamean2(u0=M6, u1=M6a, sd=sd6,   ratio=R6, sdr=rsd6, alternative=s6, sig.level =A6 )
-
-
-
-res <- rbind(A, B , C, D, E, F) 
-
-
-#----------------------------------------------------------------------------------
  
-      x <- res
-     
-txt <- with(x,paste0(": ~\U1D728( ",mu1,", ",sd1,")", 
-                                  " & ~\U1D728( ",mu2,", ",sd2,")", 
-                                "\n\U1D7AA= ",alpha, " ",sided, ", ratio=",ratio))
+names(bvout)  <-c("n1", "n2", "delta",  "sigma1", "sigma2", "alpha", "power", "side", "n note" , "note")
+
+bvout$n <- as.numeric(bvout$n1) + as.numeric(bvout$n2)
+bvout$power <- as.numeric(bvout$power)
+
+result <- cbind(bvout, d)
+
  
-      
-      x$phrase <- txt
-      
-      x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
-      
-      x$n <- rowSums( cbind (as.numeric(as.character(x$n1)) ,
-                             as.numeric(as.character(x$n2)), na.rm=TRUE))
-      x$n <-  (as.numeric(as.character(x$n1)) +
-                             as.numeric(as.character(x$n2)) )
-      
-      x$variable <- rep(1:6, each=length(n))
+################text
 
-      x$variable <- factor(x$variable)
 
-      x$tag <-  paste(as.character(x$variable),as.character(x$phrase))
-      
-      x$ratio <- factor(x$ratio)
+x <- result
 
-      x$n <- as.numeric(as.character(x$n))
-      
-      x$power <- as.numeric(as.character(x$power))
+txt <- with(x,paste0("~\U1D728( ",mu1,", ",sigma2,")", 
+                     " & ~\U1D728( ",mu2,", ",sigma2,")", 
+                     "\n\U1D7AA= ",alpha, " ",side, ", \nrandomisation ratio=",ratio,"\n"))
+
+
+x$phrase <- txt
+
+x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
+
+  
+
+pow <- x[,c("n","power","phrase","ratio")]
  
      
   #-----------------------------------------------------------------------
     return(list(  
       
-      xy=x 
+      pow=pow
       
      ))    
 
 })
       
 
-
-
 ```
-$\alpha$ type I assertion error $\beta$ not required
+ 
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 3
+### Chart 9
 
-```{r surv plot2, eval=TRUE}
+```{r surv plot9, eval=TRUE}
 
-
+ 
 renderPlot({
   
- p =      s2()$xy
-  
- p <- p[complete.cases(p), ]
+ L =      s22()$pow
  
   #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangem[2] <= 1000, 50,
-           ifelse(input$x_rangem[2] > 1000 & input$x_rangem[2] < 3000 ,200
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_r[2] <= 1000, 50,
+           ifelse(input$x_r[2] > 1000 & input$x_r[2] < 3000 ,200
                        ,  500))
 
-  #https://stackoverflow.com/questions/18515588/dynamic-legend-labels-in-ggplot2
  
-  # p$tag <- substring( p$tag, 2)
+  all <- ggplot(data=L,
+       aes(x=n, y=power, 
+           colour=phrase)) +
+  geom_line()  +
  
-  legendlabels <- data.frame(
-                    'stadtland'= unique(p$tag),
-                    stringsAsFactors=FALSE)
-
-   p <- p[,c( "n",  "n2", "n1" , "mu1", "sd1", "mu2", "sd2",
-              "alpha","sided",   "power",   "ratio", 
-  "variable")]
-  #-----------------------------------------------------------------------
- 
-  all <- ggplot(p, aes(x = n, y = power, 
-                    linetype=ratio,
-                    #group = interaction(ratio, hr),
-                    
-                    group=variable,
-                    colour = variable)) + # # had hr here initally mis match with legend
-  geom_line() +
-
-    scale_color_manual( labels=legendlabels[['stadtland']], # c("a","b","c","d","e","f"),
-                        values = c("red", "green", "blue", "purple","black","orange")) +
-
-    # scale_color_manual( labels=unique(p$tag), # c("a","b","c","d","e","f"),
-    #                     values = c("red", "green", "blue", "purple","black","orange")) +
-
-  scale_y_continuous(breaks = seq(input$y_rangem[1], input$y_rangem[2], by = 0.1),
-                       limits = c(input$y_rangem[1], input$y_rangem[2])) +
-  scale_x_continuous(breaks = seq(input$x_rangem[1], input$x_rangem[2],skips), limits =                                    c(input$x_rangem[1], input$x_rangem[2])) +
+  scale_y_continuous(breaks = 
+                       seq(input$y_r [1], input$y_r [2], by = 0.1),
+                       limits = c(input$y_r [1], input$y_r [2])) +
+    
+  scale_x_continuous(breaks =
+                       seq(input$x_r [1], input$x_r [2], skips), 
+                       limits = c(input$x_r [1],  input$x_r [2])) +
+    
   theme_bw() +
   theme(
     plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
@@ -903,61 +301,37 @@ renderPlot({
     plot.background = element_rect(fill = 'white', colour = 'white')
   ) +
 
-
+  #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
  
-  labs(caption = paste("- Alpha the type I assertion probability. \n- The allocation ratio affects the second group. \n- Can use to power non-inferiority design, recall alpha 0.025 one sided is the same as 0.05 two sided. \n- Explicit non-inferioirity example (n is total sample size, CV is the shared sd : PowerTOST::power.noninf( alpha=0.025, n= 50, logscale=FALSE, theta0=0, margin =2, CV=3,design='parallel') #0.64 power" )) +
+  labs(caption = paste("- Alpha the type I assertion probability." )) +
 
-  ggtitle(paste0(" Power (or total sample size) for two means (superiority and non-inferiority) ") )
+  ggtitle(paste0(" Power (or total sample size) ") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
 all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 
 print(all)
-#-----------------------------------------------------------
-#ggplotly(all)
+ 
  })
  
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
  
+  
 ```
 
-### Listing
-
- 
-
-```{r listings3}
-
-
- DT::renderDataTable({
-
-    p <-  s2()$xy
-    
-     # p <- p[,c( "n",  "n2", "n1" , "hr", "alpha", "sided",   "Power",    "ratio" )]
-      
-      p$phrase <- p$tag <- NULL
-    DT::datatable(p, rownames=FALSE,
-                  plugins = 'natural',
-                  options = list(
-                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
-                  ))
-})
-
-``` 
-
-
-Proportional odds
+Proportional odds (PO)
 ===
 
-```{r, ncont}
-
-
- 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# start of app
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```{r}
  
 ```
 
@@ -1693,498 +1067,6 @@ br()
 
 
 
-``` 
-
-
-Three arm trial (continuous and binary)
-===
-
-```{r, threearm}
-
-
- 
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
-
-```{r threearm1}
-          
-          splitLayout(
-          textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
-          value= "1"),)
-
-          splitLayout(
-          textInput("mus",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
-          value= ".9,.8,.7"),)
-           
-          splitLayout(
-          textInput("sds", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
-          value= "5.22,5.22,5.22"),  )
-          
-          splitLayout(
-          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05"),  )
-     
-          splitLayout(
-          textInput("ss1",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
-          value= "500"),)                                
-                             
-                
-          splitLayout(
-          textInput("N1",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
-          value= "40"),)        
-          
-    
-          br()
-   
-          
- threearm <- reactive({
-  
-        sig.level <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
-        mus       <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
-        link      <-   (as.numeric(unlist(strsplit(input$link  ,","))))    # fraction
-        sds       <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
-        ss        <-   (as.numeric(unlist(strsplit(input$ss1   ,","))))
-        N         <-   (as.numeric(unlist(strsplit(input$N1    ,","))))
-#------------------------------------------------------------------------------------------------------------  
-      
-      
-        # from multiarm power simulations4.R
-        
-    three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  
-                          nSims=sims , out.var=1 )
-{
-  
-  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
-          
-  if (out.var %in% 1)    {    
-          
-  sigma0=sqrt(u0*(1-u0)) #placebo se
-  sigma1=sqrt(u1*(1-u1)) #arm1 se
-  sigma2=sqrt(u2*(1-u2)) #arm2 se
-    
-  } 
-  
-  for (i in 1:nSims) {
-    
-    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
-    y1=rnorm(1, u1, sigma1/sqrt(n))
-    y2=rnorm(1, u2, sigma2/sqrt(n))
-    
-    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
-    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
-    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
-    
-    t1=2*(1-pnorm(z1))  # 2 sided p-value
-    t2=2*(1-pnorm(z2))
-    t3=2*(1-pnorm(z3))
-    
-    #power
-    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
-    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
-    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
-    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
-    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
-    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
-  }
-  
-  return (c( 
-    "power arm1 v placebo being signif. ",   formatz4(P1),
-    "power arm2 v placebo being signif. ",formatz4(P2),
-    "power for both arms v placebo being signif.", formatz4(P3) ,
-    "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
-    "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
-    "power for at least one arm signif. v placebo ", formatz4(P6) 
-  ))
-}
-
-##  
-        
- x<-  three.arm(u0=mus[1], u1=mus[2], u2=mus[3], sigma0=sds[1], sigma1=sds[2], sigma2=sds[3], 
-             n=N, alpha=sig.level, out.var=link, nSims=ss)     
-        
-        
-     return(list(  
-       
-       AA =  paste(x[1],x[2]),
-       BB =  paste(x[3],x[4]),
-       
-       CC =  paste(x[5],x[6]),
-       DD =  paste(x[7],x[8]),
-       
-       EE =  paste(x[9],x[10]),
-       FF =  paste(x[11],x[12])
-       
-      ))    
- 
- })
-       
- 
- 
-```
- 
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 7
-
-```{r threearmo, eval=TRUE}
- 
- 
-h5(htmlOutput("intro2")) 
-br()
- 
-
-#-------------------------------------------------------------------------------------------------------
-
- output$intro2 <- renderText({  # create interactive text t1
-
- 
-    print(paste0(
-      
-       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$AA,
-               
-               "Power")   ,
-      
-         br(), 
-          br(), 
-      
-           tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$BB,
-               
-              "Power")   ,
-     
-        br(),  br(),
-  
-     tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$CC,
-               
-              "Power")   ,
-     
-        br(),  br(),
-   
-     
-       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$DD,
-               
-              "Power")   ,
-     
-        br(),  br(),
-     
-          
-       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$EE,
-               
-              "Power")   ,
-     
-        br(),  br(),
-     
-     
-          
-       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$FF,
-               
-              "Power")   ,
-     
-        br(),  br(),
-     
-
-       "."))
-
- })
- 
-
-
-``` 
-
-
-Three arm trial (continuous and binary) with figure
-===
-
-```{r, threearm2}
-
-
- 
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
-
-```{r threearm12, eval=TRUE}
-          
-          splitLayout(
-          textInput("link2",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
-          value= "1"),)
-
-          splitLayout(
-          textInput("mus2",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
-          value= ".9,.8,.7"),)
-           
-          splitLayout(
-          textInput("sds2", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
-          value= "5.22,5.22,5.22"),  )
-          
-          splitLayout(
-          textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05"),  )
-     
-          splitLayout(
-          textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
-          value= "500"),)                                
-                             
-                
-          # splitLayout(
-          # textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
-          # value= "40"),)        
-          
-          sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
-                  min = 0, max = 5000,step=100,ticks=F)
-          
-          sliderInput('y_rangepo2', 'Plot y-range', value = c(0,1),
-                  min = 0, max = 1,step=.05,ticks=F)
-
-          br()
-          
-          
-          
-          #----------------function
-        # from multiarm power simulations4.R
-        
-    three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var )
-{
-  
-  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
-          
-  if (out.var %in% 1)    {    
-          
-  sigma0=sqrt(u0*(1-u0)) #placebo se
-  sigma1=sqrt(u1*(1-u1)) #arm1 se
-  sigma2=sqrt(u2*(1-u2)) #arm2 se
-    
-  } 
-  
-  for (i in 1:nSims) {
-    
-    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
-    y1=rnorm(1, u1, sigma1/sqrt(n))
-    y2=rnorm(1, u2, sigma2/sqrt(n))
-    
-    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
-    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
-    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
-    
-    t1=2*(1-pnorm(z1))  # 2 sided p-value
-    t2=2*(1-pnorm(z2))
-    t3=2*(1-pnorm(z3))
-    
-    #power
-    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
-    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
-    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
-    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
-    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
-    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
-  }
-  
-  # return (c( 
-  #   "power arm1 v placebo being signif. ",   formatz4(P1),
-  #   "power arm2 v placebo being signif. ",formatz4(P2),
-  #   "power for both arms v placebo being signif.", formatz4(P3) ,
-  #   "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
-  #   "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
-  #   "power for at least one arm signif. v placebo ", formatz4(P6) 
-  # ))
-  
-  
-  structure (list( 
-       P1=P1,
-     P2=P2,
-   P3=P3 ,
-     P4=P4 ,
-     P5=P5 ,
-    P6=P6 
-  ))  
-  
-}
-
-          
-          #----------------end function
- 
-          
- threearmx <- reactive({
-  
-        sig.level <-   (as.numeric(unlist(strsplit(input$alphas2,","))))    
-        mus         <-   (as.numeric(unlist(strsplit(input$mus2   ,","))))    
-        link         <-   (as.numeric(unlist(strsplit(input$link2    ,","))))    # fraction
-        sds        <-   (as.numeric(unlist(strsplit(input$sds2   ,","))))   
-        ss        <-   (as.numeric(unlist(strsplit(input$ss12    ,","))))
-      #  N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
-#---------------------------------------------------------------------------------------------------
-          n= seq(2,input$x_rangepo2[2], 2)
-        
-        # create a dataset , this will be input to function
-        
-        d <- tidyr::expand_grid(mu1=mus[1], mu2=mus[2], mu3=mus[3],
-              sigma0=sds[1], sigma1=sds[2], sigma2=sds[3],
-              alpha=sig.level, out.var=link,  n=n)
-  
-              bvout <- matrix(NA, ncol=6, nrow=length(n))
-              bvout <- as.data.frame(bvout)
-   
-    #apply function to each row    
-        
-   for( i in 1: length(n)) {
-     
-         bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
-                        sigma0=d$sigma0 [i], sigma1=d$sigma1[i], sigma2=d$sigma2[i], 
-                        n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
-  
-            }
-       
-        result <- cbind(bvout, d)
-      
-        names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", "at least 1", "mu1", "mu2", "mu3", "sigma0", 
-"sigma1", "sigma2", "alpha", "out.var", "n")
- 
-     x <- result
-
-    return(list(
-
-       result=result
-
-      ))
-
- })
-       
- 
-```
- 
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 8
-
-```{r surv plot8, eval=TRUE}
-
-library("reshape2")
-renderPlot({
-  
- p =      threearmx()$result
-  
- p <- p[complete.cases(p), ]
- 
- L <- melt(p, id="n", 
-           measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
-"at least 1") )
- 
- 
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
-           ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
-                       ,  500))
-
- 
-  all <- ggplot(data=L,
-       aes(x=n, y=value, 
-           colour=variable)) +
-  geom_line()  +
- 
-  scale_y_continuous(breaks = 
-                       seq(input$y_rangepo2[1], input$y_rangepo2[2], by = 0.1),
-                       limits = c(input$y_rangepo2[1], input$y_rangepo2[2])) +
-    
-  scale_x_continuous(breaks =
-                       seq(input$x_rangepo2[1], input$x_rangepo2[2], skips), 
-                       limits = c(input$x_rangepo2[1],  input$x_rangepo2[2])) +
-    
-  theme_bw() +
-  theme(
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
-
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-
-  labs(y="Power", x = 'Total Sample Size', color = "Comparison")+
- 
-  labs(caption = paste("- Alpha the type I assertion probability." )) +
-
-  ggtitle(paste0(" Power (or total sample size) for three arms ") )
-
-
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
- 
- })
- 
-  
-  
- 
-
- 
-```
-
-### Listing
-
- 
-
-```{r listings8}
-
-
- DT::renderDataTable({
-
-    p <-  threearmx()$result
-      
-       namez <- names(p)
-      
-  d1 <-  DT::datatable(p, rownames=FALSE,
-                  plugins = 'natural',
-                  options = list(
-                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
-                  ))
-    
-  
-     
-  
-      d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
-      
-      d1
-})
-
- 
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2214,276 +1096,6 @@ print(all)
 
 
  
-
-``` 
-
-Continuous 2
-====
-```{r, cont2}
-
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-
-**Enter parameters of interest separated by a comma**
-
-```{r}
-
- 
-  
-          splitLayout(
-          textInput("mu1x",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 1, enter pop. means"))),    
-          value= "2"),)
-           
-          splitLayout(
-          textInput("sd1x",    
-                    div(h5(tags$span(style="color:blue", "\U1D7BC 1, enter pop. SDs"))),    
-          value= "3"),)
-          
-          
-                 splitLayout(
-          textInput("mu2x",    
-                    div(h5(tags$span(style="color:blue", "\U1D77B 2, enter pop. means"))),    
-          value= "3"),)
-                 
-                 
-                        splitLayout(
-          textInput("rsdx",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal \U1D7BCs "))),   
-          value= "1"),)                                
-                        
-          
-                               
-          
-              splitLayout(
-          textInput("alphamx", 
-                     div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-                    
-                    
-                    
-          value= ".05"), 
-                                       )
-              
-              
-                 splitLayout(
-          textInput("sidemx",
-                    div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
-          value= "2, 1"),)
-              
-                    splitLayout(
-          textInput("romx",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1,2"),)     
-                    
-       
-
-                                        
-          sliderInput('x_r', 'Plot x-range', value = c(0,400),
-                  min = 0, max = 5000,step=100,ticks=F)
-          
-          sliderInput('y_r', 'Plot y-range', value = c(0,1),
-                  min = 0, max = 1,step=.05,ticks=F)
-
-   
-          br()
-       
-                
-s22 <- reactive({
-  
-# function adapted from gsDesign::nEvents--------------------------------------------------------------------------
-  
-    A <-   (as.numeric(unlist(strsplit(input$alphamx,","))))    #alpha
-
-    Az <-   (as.numeric(unlist(strsplit(input$mu1x,","))))    # mean1
-    
-    Aa<-   (as.numeric(unlist(strsplit(input$sd1x,","))))    # sd
-    
-    m2 <-   (as.numeric(unlist(strsplit(input$mu2x,","))))    # mean 2
-
-    Ac<-   (as.numeric(unlist(strsplit(input$sidemx,","))))  # one or two sided
-
-    Ab<-   (as.numeric(unlist(strsplit(input$romx,","))))    # randomisation
-    
-    Ad<-   (as.numeric(unlist(strsplit(input$rsdx,","))))    # sd ratio
-
-         
-    
-      n= seq(2,input$x_r[2], 2)
-      
-      
-      
-# hard code for testing
-    #  n <- seq(2,200,2)
-# Az <-  c(1,2)   # mean 1
-# m2 <-   c(2,3)  # mean2
-# A <-   c(.05,.025)   # alpha
-# Aa<-   c(2,2)    # rand ratio
-# Ab<-   c(1,2)   #sd ratio and rand ratio
-# Ac<-   c(1,2) # ssigma 
-
-      
-      
-side <- ifelse(Ac==1,"one.sided",
-                   ifelse(Ac==2,"two.sided", NA))
-
-
-d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
-
-bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
-bvout <- as.data.frame(bvout)
-
-#apply function to each row    
-
-for( i in 1: dim(d)[1]) {
-  
-  z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
-                           delta=d$mu1[i]-d$mu2[i], 
-                                        alternative=d$side[i],
-                                        sig.level=d$alpha[i])
-  x <- unlist(z)
-  
- 
-  if (length(x) < 10) {x <- c(x[1], NA, x[2:3], NA , x[4:8]) }  #pad when sd ratio and rand ratio change
-  
-  
-  bvout[i,] <- x
-}
-
-# fil NA 
-bvout[] <- t(apply(bvout, 1, zoo::na.locf))
-
- 
-names(bvout)  <-c("n1", "n2", "delta",  "sigma1", "sigma2", "alpha", "power", "side", "n note" , "note")
-
-bvout$n <- as.numeric(bvout$n1) + as.numeric(bvout$n2)
-bvout$power <- as.numeric(bvout$power)
-
-result <- cbind(bvout, d)
-
- 
-################text
-
-
-x <- result
-
-txt <- with(x,paste0("~\U1D728( ",mu1,", ",sigma2,")", 
-                     " & ~\U1D728( ",mu2,", ",sigma2,")", 
-                     "\n\U1D7AA= ",alpha, " ",side, ", \nrandomisation ratio=",ratio,"\n"))
-
-
-x$phrase <- txt
-
-x$ratio <- ifelse(x$n2==x$n1, "equal","unequal")
-
-  
-
-pow <- x[,c("n","power","phrase","ratio")]
-
-   
-    
-    
-    
-    
-    
-    
-     #-----------------------------------------------------------------------
- 
-     
-  #-----------------------------------------------------------------------
-    return(list(  
-      
-      pow=pow
-      
-     ))    
-
-})
-      
-
-```
- 
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 9
-
-```{r surv plot9, eval=TRUE}
-
- 
-renderPlot({
-  
- L =      s22()$pow
- 
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_r[2] <= 1000, 50,
-           ifelse(input$x_r[2] > 1000 & input$x_r[2] < 3000 ,200
-                       ,  500))
-
- 
-  all <- ggplot(data=L,
-       aes(x=n, y=power, 
-           colour=phrase)) +
-  geom_line()  +
- 
-  scale_y_continuous(breaks = 
-                       seq(input$y_r [1], input$y_r [2], by = 0.1),
-                       limits = c(input$y_r [1], input$y_r [2])) +
-    
-  scale_x_continuous(breaks =
-                       seq(input$x_r [1], input$x_r [2], skips), 
-                       limits = c(input$x_r [1],  input$x_r [2])) +
-    
-  theme_bw() +
-  theme(
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
-
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-
-  labs(y="Power", x = 'Total Sample Size', color = "Comparison")+
- 
-  labs(caption = paste("- Alpha the type I assertion probability." )) +
-
-  ggtitle(paste0(" Power (or total sample size) ") )
-
-
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
- 
- })
- 
-  
-
-
-
-
 
 
 ``` 
@@ -2833,200 +1445,13 @@ print(all)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-``` 
-
-
-New binary
-===
-
-```{r, newbin}
-
-
- 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# start of app
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- 
-```
-
-Column {.sidebar}
------------------------------------------------------------------------
-
-**xxxx**
-
-```{r newbin input}
-
-
- 
-          splitLayout(
-          textInput("p1_newbin",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 1"))),    
-          value= "0.2,0.25 "),)
-           
-          splitLayout(
-          textInput("p2_newbin",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 2"))),    
-          value= "0.1,0.15 "),)
-          
-          splitLayout(
-          textInput("alpha_newbin", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
-          value= "0.05, 0.025"), 
-                                       )
-          splitLayout(
-          textInput("ro_newbin",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= ".5"),)                                
-                                        
-          sliderInput('x_range_newbin', 'Plot x-range', value = c(0,800),
-                  min = 0, max = 5000,step=100,ticks=F)
-          
-          sliderInput('y_range_newbin', 'Plot y-range', value = c(0,1),
-                  min = 0, max = 1, step=.05,ticks=F)
-
-   
-          br() 
-          
-          
-          
-         newbin<- reactive({
-  
-         p1         <-   (as.numeric(unlist(strsplit(input$p1_newbin,","))))    
-         p2         <-   (as.numeric(unlist(strsplit(input$p2_newbin,"," ))))    # fraction
-         sig.level  <-   (as.numeric(unlist(strsplit(input$alpha_newbin,"," ))))
-         frac       <-   (as.numeric(unlist(strsplit(input$ro_newbin,"," )))) 
-        
-         n= seq(2,input$x_range_newbin[2], 2)
-      
-         d <- tidyr::expand_grid(p1 = p1, p2=p2, alpha=sig.level, frac =frac, n=n )
-         
-         d$n1 <- round(d$n*d$frac  )
-         d$n2     <- d$n - d$n1 
-         
-         d$power  <- NA
-         d$power  <- bpower(n1 = d$n1, n2 =d$n2, p1 = d$p1, p2 =  d$p2, alpha = d$alpha)  
-          
-          
-       #-------------------------------------------------------
-       # code to help with legend
- 
-      
-      x<-d
-      x$phrase <- with(x, paste("\U1D7B9 1=",x$p1,", \U1D7B9 2=",x$p2,"\n\U1D7AA=",x$alpha, ", ratio=",x$frac))
-     
-      return(list(res=x
-      
-     ))    
-
-})
-      
- 
-```
-
-$\alpha$ type I assertion error 
-
-## Column {.tabset .tabset-fade}
-
-### Chart 1
-
-```{r newbin plot1}
-
-renderPlot({
-  
-  p =      newbin()$res
-  
-  p <- p[complete.cases(p), ]
-  
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_range_newbin[2] <= 1000, 50,
-           ifelse(input$x_range_newbin[2] >  1000 & input$x_range_newbin[2] < 3000 ,200, 500))
-   
-  # -------------------------
-  
-  all <-ggplot(p, aes(x = n, y = power, #linetype=r,
-                    group=interaction(p1,p2,alpha, frac),
-                    colour = phrase)) +
-  geom_line() +
     
- 
-  scale_y_continuous(breaks = seq(input$y_range_newbin[1], input$y_range_newbin[2], by = 0.1),
-                     limits =   c(input$y_range_newbin[1], input$y_range_newbin[2])) +
-  scale_x_continuous(breaks = seq(input$x_range_newbin[1], input$x_range_newbin[2], skips),
-                     limits =   c(input$x_range_newbin[1], input$x_range_newbin[2])) +
-    
-  
-    
-  theme_bw() +
-  theme( 
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-     
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-    
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-   
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-    
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
-  
-  
-  labs(y="Power", x = 'Total Sample Size', color = "Scenarios", linetype="Ratio" )+
-  labs(caption = paste("- Ratio, see legend,less than 1, n2 is the smaller group.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
-  ggtitle(paste0("Power (or sample size) for difference in two proportions") ) 
-
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
-  #-----------------------------------------------------------------------
-#ggplotly(all)
- })
-    
-      
-      
-      
       
 
 ``` 
 
 
-Survival2
+Survival endpoint
 ====
 ```{r, survival2}
 
@@ -3261,6 +1686,746 @@ print(all)
 
 ```
       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+``` 
+
+
+Binary endpoint
+===
+
+```{r, newbin}
+
+
+ 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# start of app
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**xxxx**
+
+```{r newbin input}
+
+
+ 
+          splitLayout(
+          textInput("p1_newbin",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 1"))),    
+          value= "0.2,0.25 "),)
+           
+          splitLayout(
+          textInput("p2_newbin",    div(h5(tags$span(style="color:blue", "hypothesised proportion(s) \U1D7B9 2"))),    
+          value= "0.1,0.15 "),)
+          
+          splitLayout(
+          textInput("alpha_newbin", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05, 0.025"), 
+                                       )
+          splitLayout(
+          textInput("ro_newbin",    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
+          value= ".5"),)                                
+                                        
+          sliderInput('x_range_newbin', 'Plot x-range', value = c(0,800),
+                  min = 0, max = 5000,step=100,ticks=F)
+          
+          sliderInput('y_range_newbin', 'Plot y-range', value = c(0,1),
+                  min = 0, max = 1, step=.05,ticks=F)
+
+   
+          br() 
+          
+          
+          
+         newbin<- reactive({
+  
+         p1         <-   (as.numeric(unlist(strsplit(input$p1_newbin,","))))    
+         p2         <-   (as.numeric(unlist(strsplit(input$p2_newbin,"," ))))    # fraction
+         sig.level  <-   (as.numeric(unlist(strsplit(input$alpha_newbin,"," ))))
+         frac       <-   (as.numeric(unlist(strsplit(input$ro_newbin,"," )))) 
+        
+         n= seq(2,input$x_range_newbin[2], 2)
+      
+         d <- tidyr::expand_grid(p1 = p1, p2=p2, alpha=sig.level, frac =frac, n=n )
+         
+         d$n1 <- round(d$n*d$frac  )
+         d$n2     <- d$n - d$n1 
+         
+         d$power  <- NA
+         d$power  <- bpower(n1 = d$n1, n2 =d$n2, p1 = d$p1, p2 =  d$p2, alpha = d$alpha)  
+          
+          
+       #-------------------------------------------------------
+       # code to help with legend
+ 
+      
+      x<-d
+      x$phrase <- with(x, paste("\U1D7B9 1=",x$p1,", \U1D7B9 2=",x$p2,"\n\U1D7AA=",x$alpha, ", ratio=",x$frac))
+     
+      return(list(res=x
+      
+     ))    
+
+})
+      
+ 
+```
+
+$\alpha$ type I assertion error 
+
+## Column {.tabset .tabset-fade}
+
+### Chart 1
+
+```{r newbin plot1}
+
+renderPlot({
+  
+  p =      newbin()$res
+  
+  p <- p[complete.cases(p), ]
+  
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_range_newbin[2] <= 1000, 50,
+           ifelse(input$x_range_newbin[2] >  1000 & input$x_range_newbin[2] < 3000 ,200, 500))
+   
+  # -------------------------
+  
+  all <-ggplot(p, aes(x = n, y = power, #linetype=r,
+                    group=interaction(p1,p2,alpha, frac),
+                    colour = phrase)) +
+  geom_line() +
+    
+ 
+  scale_y_continuous(breaks = seq(input$y_range_newbin[1], input$y_range_newbin[2], by = 0.1),
+                     limits =   c(input$y_range_newbin[1], input$y_range_newbin[2])) +
+  scale_x_continuous(breaks = seq(input$x_range_newbin[1], input$x_range_newbin[2], skips),
+                     limits =   c(input$x_range_newbin[1], input$x_range_newbin[2])) +
+    
+  
+    
+  theme_bw() +
+  theme( 
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+     
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
+    legend.position="right",
+   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+    legend.key.size = unit(1.3, "cm"),
+    legend.key = element_rect(color = NA, fill = NA),
+    
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
+    axis.line.x = element_line(color="black"),
+    axis.line.y = element_line(color="black"),
+   
+    plot.caption=element_text(hjust = 0, size = 12),
+    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
+    
+    strip.background = element_rect(colour = "black", fill = "white"),
+    panel.background = element_rect(fill = 'white', colour = 'white'),
+    plot.background = element_rect(fill = 'white', colour = 'white')
+  ) +
+  
+  
+  labs(y="Power", x = 'Total Sample Size', color = "Scenarios", linetype="Ratio" )+
+  labs(caption = paste("- Ratio, see legend,less than 1, n2 is the smaller group.\n- Where the ratio of sample sizes n1/n2=x in one case and n2/n1=x in another (where x is a constant) the power of the test differs between these scenarios.\n- Uses method of Fleiss, Tytun, and Ury (but without the continuity correction) to estimate the power (or the sample size to achieve a given power) of a two-sided test for the difference in two proportions. \n- Fleiss JL, Tytun A, Ury HK (1980): A simple approximation for calculating sample sizes for comparing independent proportions. Biometrics 36:343–6.\n" )) +
+  ggtitle(paste0("Power (or sample size) for difference in two proportions") ) 
+
+#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+
+print(all)
+  #-----------------------------------------------------------------------
+#ggplotly(all)
+ })
+    
+      
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+``` 
+
+
+Three arm trial (continuous and binary) with figure
+===
+
+```{r, threearm2}
+
+
+ 
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
+
+```{r threearm12, eval=TRUE}
+          
+          splitLayout(
+          textInput("link2",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
+          value= "1"),)
+
+          splitLayout(
+          textInput("mus2",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
+          value= ".9,.8,.7"),)
+           
+          splitLayout(
+          textInput("sds2", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
+          value= "5.22,5.22,5.22"),  )
+          
+          splitLayout(
+          textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"),  )
+     
+          splitLayout(
+          textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
+          value= "500"),)                                
+                             
+                
+          # splitLayout(
+          # textInput("N12",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          # value= "40"),)        
+          
+          sliderInput('x_rangepo2', 'Plot x-range', value = c(0,300),
+                  min = 0, max = 5000,step=100,ticks=F)
+          
+          sliderInput('y_rangepo2', 'Plot y-range', value = c(0,1),
+                  min = 0, max = 1,step=.05,ticks=F)
+
+          br()
+          
+          
+          
+          #----------------function
+        # from multiarm power simulations4.R
+        
+    three.arm.v2 <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  nSims=sims , out.var )
+{
+  
+  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
+          
+  if (out.var %in% 1)    {    
+          
+  sigma0=sqrt(u0*(1-u0)) #placebo se
+  sigma1=sqrt(u1*(1-u1)) #arm1 se
+  sigma2=sqrt(u2*(1-u2)) #arm2 se
+    
+  } 
+  
+  for (i in 1:nSims) {
+    
+    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
+    y1=rnorm(1, u1, sigma1/sqrt(n))
+    y2=rnorm(1, u2, sigma2/sqrt(n))
+    
+    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
+    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
+    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
+    
+    t1=2*(1-pnorm(z1))  # 2 sided p-value
+    t2=2*(1-pnorm(z2))
+    t3=2*(1-pnorm(z3))
+    
+    #power
+    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
+    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
+    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
+    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
+  }
+  
+  # return (c( 
+  #   "power arm1 v placebo being signif. ",   formatz4(P1),
+  #   "power arm2 v placebo being signif. ",formatz4(P2),
+  #   "power for both arms v placebo being signif.", formatz4(P3) ,
+  #   "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
+  #   "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
+  #   "power for at least one arm signif. v placebo ", formatz4(P6) 
+  # ))
+  
+  
+  structure (list( 
+       P1=P1,
+     P2=P2,
+   P3=P3 ,
+     P4=P4 ,
+     P5=P5 ,
+    P6=P6 
+  ))  
+  
+}
+
+          
+          #----------------end function
+ 
+          
+ threearmx <- reactive({
+  
+        sig.level <-   (as.numeric(unlist(strsplit(input$alphas2,","))))    
+        mus         <-   (as.numeric(unlist(strsplit(input$mus2   ,","))))    
+        link         <-   (as.numeric(unlist(strsplit(input$link2    ,","))))    # fraction
+        sds        <-   (as.numeric(unlist(strsplit(input$sds2   ,","))))   
+        ss        <-   (as.numeric(unlist(strsplit(input$ss12    ,","))))
+      #  N         <-   (as.numeric(unlist(strsplit(input$N12     ,","))))
+#---------------------------------------------------------------------------------------------------
+          n= seq(2,input$x_rangepo2[2], 2)
+        
+        # create a dataset , this will be input to function
+        
+        d <- tidyr::expand_grid(mu1=mus[1], mu2=mus[2], mu3=mus[3],
+              sigma0=sds[1], sigma1=sds[2], sigma2=sds[3],
+              alpha=sig.level, out.var=link,  n=n)
+  
+              bvout <- matrix(NA, ncol=6, nrow=length(n))
+              bvout <- as.data.frame(bvout)
+   
+    #apply function to each row    
+        
+   for( i in 1: length(n)) {
+     
+         bvout[i,] <- three.arm.v2(u0=d$mu1[i], u1=d$mu2[i], u2=d$mu3[i], 
+                        sigma0=d$sigma0 [i], sigma1=d$sigma1[i], sigma2=d$sigma2[i], 
+                        n=d$n[i], alpha=d$alpha[i], out.var=d$out.var[i], nSims=ss) 
+  
+            }
+       
+        result <- cbind(bvout, d)
+      
+        names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", "at least 1", "mu1", "mu2", "mu3", "sigma0", 
+"sigma1", "sigma2", "alpha", "out.var", "n")
+ 
+     x <- result
+
+    return(list(
+
+       result=result
+
+      ))
+
+ })
+       
+ 
+```
+ 
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart 8
+
+```{r surv plot8, eval=TRUE}
+
+library("reshape2")
+renderPlot({
+  
+ p =      threearmx()$result
+  
+ p <- p[complete.cases(p), ]
+ 
+ L <- melt(p, id="n", 
+           measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
+"at least 1") )
+ 
+ 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
+           ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
+                       ,  500))
+
+ 
+  all <- ggplot(data=L,
+       aes(x=n, y=value, 
+           colour=variable)) +
+  geom_line()  +
+ 
+  scale_y_continuous(breaks = 
+                       seq(input$y_rangepo2[1], input$y_rangepo2[2], by = 0.1),
+                       limits = c(input$y_rangepo2[1], input$y_rangepo2[2])) +
+    
+  scale_x_continuous(breaks =
+                       seq(input$x_rangepo2[1], input$x_rangepo2[2], skips), 
+                       limits = c(input$x_rangepo2[1],  input$x_rangepo2[2])) +
+    
+  theme_bw() +
+  theme(
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
+    legend.position="right",
+   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+    legend.key.size = unit(1.3, "cm"),
+    legend.key = element_rect(color = NA, fill = NA),
+
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
+    axis.line.x = element_line(color="black"),
+    axis.line.y = element_line(color="black"),
+
+    plot.caption=element_text(hjust = 0, size = 12),
+    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
+
+    strip.background = element_rect(colour = "black", fill = "white"),
+    panel.background = element_rect(fill = 'white', colour = 'white'),
+    plot.background = element_rect(fill = 'white', colour = 'white')
+  ) +
+
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+ 
+  labs(caption = paste("- Alpha the type I assertion probability." )) +
+
+  ggtitle(paste0(" Power (or total sample size) for three arms ") )
+
+
+#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+
+print(all)
+ 
+ })
+ 
+  
+  
+ 
+
+ 
+```
+
+### Listing
+
+ 
+
+```{r listings8}
+
+
+ DT::renderDataTable({
+
+    p <-  threearmx()$result
+      
+       namez <- names(p)
+      
+  d1 <-  DT::datatable(p, rownames=FALSE,
+                  plugins = 'natural',
+                  options = list(
+                    columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                  ))
+    
+  
+     
+  
+      d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+      d1
+})
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+``` 
+
+
+Three arm trial (continuous and binary)
+===
+
+```{r, threearm}
+
+
+ 
+```
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
+
+```{r threearm1}
+          
+          splitLayout(
+          textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
+          value= "1"),)
+
+          splitLayout(
+          textInput("mus",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
+          value= ".9,.8,.7"),)
+           
+          splitLayout(
+          textInput("sds", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
+          value= "5.22,5.22,5.22"),  )
+          
+          splitLayout(
+          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          value= "0.05"),  )
+     
+          splitLayout(
+          textInput("ss1",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
+          value= "500"),)                                
+                             
+                
+          splitLayout(
+          textInput("N1",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
+          value= "40"),)        
+          
+    
+          br()
+   
+          
+ threearm <- reactive({
+  
+        sig.level <-   (as.numeric(unlist(strsplit(input$alphas,","))))    
+        mus       <-   (as.numeric(unlist(strsplit(input$mus   ,","))))    
+        link      <-   (as.numeric(unlist(strsplit(input$link  ,","))))    # fraction
+        sds       <-   (as.numeric(unlist(strsplit(input$sds   ,","))))   
+        ss        <-   (as.numeric(unlist(strsplit(input$ss1   ,","))))
+        N         <-   (as.numeric(unlist(strsplit(input$N1    ,","))))
+#------------------------------------------------------------------------------------------------------------  
+      
+      
+        # from multiarm power simulations4.R
+        
+    three.arm <- function(u0, u1, u2, n,  sigma0, sigma1, sigma2, alpha1=0.05 ,  
+                          nSims=sims , out.var=1 )
+{
+  
+  P1 <- P2 <- P3 <- P4 <- P5 <- P6 <- 0 # counter        
+          
+  if (out.var %in% 1)    {    
+          
+  sigma0=sqrt(u0*(1-u0)) #placebo se
+  sigma1=sqrt(u1*(1-u1)) #arm1 se
+  sigma2=sqrt(u2*(1-u2)) #arm2 se
+    
+  } 
+  
+  for (i in 1:nSims) {
+    
+    y0=rnorm(1, u0, sigma0/sqrt(n)) # responses
+    y1=rnorm(1, u1, sigma1/sqrt(n))
+    y2=rnorm(1, u2, sigma2/sqrt(n))
+    
+    z1=(y0-y1)/sqrt(sigma1^2/n+sigma0^2/n) # arm1 v placebo z value
+    z2=(y0-y2)/sqrt(sigma2^2/n+sigma0^2/n) # arm2 v placebo z value
+    z3=(y2-y1)/sqrt(sigma2^2/n+sigma1^2/n) # arm2 v arm1 z value
+    
+    t1=2*(1-pnorm(z1))  # 2 sided p-value
+    t2=2*(1-pnorm(z2))
+    t3=2*(1-pnorm(z3))
+    
+    #power
+    if(t1<=alpha1/2){P1=P1+1/nSims} # bonferroni
+    if(t2<=alpha1/2){P2=P2+1/nSims} # bonferroni
+    if(t2<=alpha1/2 & t1<=alpha1/2){P3=P3+1/nSims}  # bonferroni
+    if(t2<=alpha1/3 & t1<=alpha1/3 & t3<=alpha1/3){P4=P4+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/3 | t1<=alpha1/3 | t3<=alpha1/3){P5=P5+1/nSims}  # bonferroni 3
+    if(t2<=alpha1/2 | t1<=alpha1/2){P6=P6+1/nSims}  # bonferroni
+  }
+  
+  return (c( 
+    "power arm1 v placebo being signif. ",   formatz4(P1),
+    "power arm2 v placebo being signif. ",formatz4(P2),
+    "power for both arms v placebo being signif.", formatz4(P3) ,
+    "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
+    "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
+    "power for at least one arm signif. v placebo ", formatz4(P6) 
+  ))
+}
+
+##  
+        
+ x<-  three.arm(u0=mus[1], u1=mus[2], u2=mus[3], sigma0=sds[1], sigma1=sds[2], sigma2=sds[3], 
+             n=N, alpha=sig.level, out.var=link, nSims=ss)     
+        
+        
+     return(list(  
+       
+       AA =  paste(x[1],x[2]),
+       BB =  paste(x[3],x[4]),
+       
+       CC =  paste(x[5],x[6]),
+       DD =  paste(x[7],x[8]),
+       
+       EE =  paste(x[9],x[10]),
+       FF =  paste(x[11],x[12])
+       
+      ))    
+ 
+ })
+       
+ 
+ 
+```
+ 
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart 7
+
+```{r threearmo, eval=TRUE}
+ 
+ 
+h5(htmlOutput("intro2")) 
+br()
+ 
+
+#-------------------------------------------------------------------------------------------------------
+
+ output$intro2 <- renderText({  # create interactive text t1
+
+ 
+    print(paste0(
+      
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$AA,
+               
+               "Power")   ,
+      
+         br(), 
+          br(), 
+      
+           tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$BB,
+               
+              "Power")   ,
+     
+        br(),  br(),
+  
+     tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$CC,
+               
+              "Power")   ,
+     
+        br(),  br(),
+   
+     
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$DD,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+          
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$EE,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+     
+          
+       tags$span(style="color:blue;font-weight:bold;font-size: 20px;", threearm()$FF,
+               
+              "Power")   ,
+     
+        br(),  br(),
+     
+
+       "."))
+
+ })
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
       
       
       

@@ -307,6 +307,16 @@ all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
 print(all)
  
  })
+
+
+ 
+```
+
+### Wiki
+
+ 
+
+```{r surv wiki}
  
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
@@ -360,9 +370,9 @@ Column {.sidebar}
    
           br()
 
-          div(h5(tags$span(style="color:blue", "Most sample size formulae involve nuisance parameters, the values of which are unknown
- when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression
- model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). The above example [Whitehead, 1983], has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter p1 as (0.17+0.274)/2 = 0.222 etc.")))
+ #          div(h5(tags$span(style="color:blue", "Most sample size formulae involve nuisance parameters, the values of which are unknown
+ # when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression
+ # model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). The above example [Whitehead, 1983], has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter p1 as (0.17+0.274)/2 = 0.222 etc.")))
       
              
           
@@ -503,7 +513,46 @@ print(all)
 #ggplotly(all)
  })
  
+ 
+```
+
+### Wiki
+
+ 
+```{r po wiki, eval=TRUE}
+
+h5(htmlOutput("powiki")) 
+br()
+ 
+#-------------------------------------------------------------------------------------------------------
+
+ output$powiki <- renderText({  # create interactive text t1
+
+ 
+print(paste0(   
+   
+   tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+        
+                 "Most sample size formulae involve nuisance parameters, the values of which are unknown when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). We use the example in Whitehead, 1983, which has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter the reference peoportion as (0.17+0.274)/2 = 0.222 etc."),
+         
+        br(),  br(), 
+       
+          tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+                 
+                 "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome.") ,
   
+        br(),  br(), 
+       
+         tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+                 
+                 "With the PO model, every category can even have only 1 entry. The WRST test works best when there are no ties (P values are more accurate). The PO model also works well if there are a huge numbers of ties. For example, even if 97% of data were at y=0, clumped at zero, this is no issue. The model handles ceiling effects and floor effects. If y is bimodal or trimodal, no problem again. The Hmisc package has the functions lrm (discrete ordnial and can handle 200 intercepts) and orm (more for continuious data and can handle 8,000 intercepts speedily and has other link functions also) for ordinal regression. ") ,
+     
+         "."))
+
+ })
+ 
+  
+ 
   
  
 ```
@@ -728,6 +777,12 @@ renderPlot({
 
 })
 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
 
 ``` 
 
@@ -1009,9 +1064,14 @@ br()
  })
 # proportional effect of treatment across the scale of the ordinal outcome
  
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
 
 ``` 
-
 
 Non PO
 ===
@@ -1325,15 +1385,18 @@ print(all)
       d1
 })
 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
   
 ``` 
 
-
 Survival endpoint
 ====
-```{r, survival2}
 
-```
 
 Column {.sidebar}
 -----------------------------------------------------------------------
@@ -1708,10 +1771,12 @@ print(all)
     
       
  
-
-
-
-
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
 
 ``` 
 
@@ -1984,10 +2049,15 @@ print(all)
 })
 
  
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
 
 
 ``` 
-
 
 Three arm trial (continuous and binary)
 ===
@@ -2186,18 +2256,16 @@ br()
           
 References
 ====
-
-[RStudio](https://www.rstudio.com)
-
-[Sixty percent of the time it works every time](https://www.ejobrien.com/)
+ 
+[SIXTY PERCENT OF THE TIME IT WORKS EVERY TIME](https://www.ejobrien.com/)
             
-[Proportional Odds Model Power Calculations for Ordinal and Mixed Ordinal/Continuous Outcomes](https://www.fharrell.com/post/pop/)
+[PROPORTIONAL ODDS MODEL POWER CALCULATIONS FOR ORDINAL AND MIXED ORDINAL/CONTINUOUS OUTCOMES](https://www.fharrell.com/post/pop/)
             
-[SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES , WHITHEAD 1998]( https://github.com/eamonn2014/power/blob/main/papers%20for%20git/bolland1998%20sampe%20size%20review%20in%20a%20head%20injury%20trial.pdf )
+[SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998]( https://github.com/eamonn2014/power/blob/main/papers%20for%20git/bolland1998%20sampe%20size%20review%20in%20a%20head%20injury%20trial.pdf )
     
-[SAMPLE SIZE CALCULATIONS FOR ORDERED CATEGORICAL RESPONSES , WHITHEAD 1998](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/whitehead1993%20SAMPLE%20SIZE%20CALCULATIONS%20FOR%20ORDERED.pdf) 
+[SAMPLE SIZE CALCULATIONS FOR ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/whitehead1993%20SAMPLE%20SIZE%20CALCULATIONS%20FOR%20ORDERED.pdf) 
 
-[SAMPLE SIZE CALCUALTION FOR THE WILCOXON MANN WHITNEY RANK SUM TEST ADJUSTING FOR TIES, AS USED IN PASS SOFTWARE FOR NON PROPORTIONAL ODDS POWER SAMPLE SIZE/CALCULATIONS. ZHAO 2008 ](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/zhao%202008%20non%20prop%20odds%20calc.pdf)
+[SAMPLE SIZE CALCUALTION FOR THE WILCOXON MANN WHITNEY RANK SUM TEST ADJUSTING FOR TIES, AS USED IN PASS SOFTWARE FOR NON PROPORTIONAL ODDS POWER SAMPLE SIZE/CALCULATIONS, ZHAO 2008 ](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/zhao%202008%20non%20prop%20odds%20calc.pdf)
 
 
 ```{r, refs}

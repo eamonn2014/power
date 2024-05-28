@@ -1,5 +1,6 @@
 ---
-title: "Power or sample size various endpoints" 
+title: "Power or sample size
+various endpoints" 
 author: 
 output: 
   flexdashboard::flex_dashboard:
@@ -1820,13 +1821,13 @@ Column {.sidebar}
 
           splitLayout(
           textInput("p1_h0",    
-          div(h5(tags$span(style="color:blue", "null hypothesis"))),    
-          value= "0.37, 0.50, 0.55"),)
+          div(h5(tags$span(style="color:blue", "Hypothesised"))),    
+          value= "0.37, 0.3,.50, 0.55"),)
 
           splitLayout(
           textInput("p1_h1",    
-          div(h5(tags$span(style="color:blue", "alternative hypothesis"))),    
-          value= ".68"),)
+          div(h5(tags$span(style="color:blue", "Postulated hypothesis"))),    
+          value= ".68, .5"),)
            
           splitLayout(
           textInput("alpha_bern", 
@@ -1835,7 +1836,7 @@ Column {.sidebar}
           
           splitLayout(
           textInput("target", 
-          div(h5(tags$span(style="color:blue", "target at which check power"))), 
+          div(h5(tags$span(style="color:blue", "target power"))), 
           value= "0.8, 0.9"),  )
            
           sliderInput('x_ranges_bern', 'Plot x-range', value = c(0,140),
@@ -1967,8 +1968,45 @@ Column {.sidebar}
 # sample size for which power is at least 
 #1-beta and there is no larger sample size in the input n where power is less than 1-beta.
             
+ # exact
    
-        
+ # with(list(mu = 0.3, mu.alt = 0.5, alpha = 0.025, n = 54), (mean(sapply(rbinom(1e4, n, mu.alt), function(x) prop.test(x, n, mu, alternative = "greater")$p.value <= alpha))))        
+ # 
+ # nBinomial1Sample(
+ #     p0 = 0.3,
+ #       p1 = 0.5,
+ #       alpha = 0.025,
+ #       beta = NULL,
+ #       n = 50:55,
+ #       outtype = 2,
+ #       conservative = FALSE
+ #     )
+ 
+ 
+ ## approx
+ 
+#  The last approaches matches Stata (normal approx I believe), both give 44
+# 
+# sampsi .3 .5, alpha(0.025) power(.80) onesample oneside
+# 
+# p=0.5 ; p0=0.3 ; alpha=0.025 ; beta=0.20
+# 
+# (n=p0*(1-p0)*((qnorm(1-alpha)+qnorm(1-beta)*sqrt(p*(1-p)/p0/(1-p0)))/(p-p0))^2)
+# 
+# ceiling(n)
+# 
+# z=(p-p0)/sqrt(p0*(1-p0)/n)
+# 
+# (Power=pnorm(sqrt(p0*(1-p0)/p/(1-p))*(abs(z)-qnorm(1-alpha))))
+# 
+# 
+# There are no choices lying between n and its neighbors n-1 and n+1 Thus, it's unrealistic (and unproductive) to expect to find a sample size that achieves exactly say 80% power. 
+
+
+
+ 
+ 
+ 
  
 ```
 $\alpha$ type I assertion error
@@ -2046,10 +2084,9 @@ renderPlot({
 
 
   #-----------------------------------------------------------------------
-
-  labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
-  labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
+ 
+  labs(y="Power", x = 'Total Sample Size', color = "Scenarios", linetype="Ratio p1:p2" )+
   labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. For each target, black dots denote when a target power is reached.  As mentioned power can actually decrease as the sample size is increased. Thus, the relationship between power and sample size is not monotonic. \nIf necessary, a red dot denotes the n after which power never dips below the target.\n" )) +
   ggtitle(paste0("Power (or sample size) for exact test of a simple null hypothesis in a Bernoulli experiment") ) 
 
@@ -2146,7 +2183,7 @@ print(all)
 
 ``` 
 
-3 arm trial (continuous and binary sim. with fig.)
+3 arm trial (cont. & binary sim. with fig.)
 ===
 
 
@@ -2425,7 +2462,7 @@ print(all)
 
 ``` 
 
-3 arm trial (continuous and binary sim.)
+3 arm trial (cont. & binary sim.)
 ===
 
 
@@ -2619,7 +2656,92 @@ br()
 
 
 
+ 
+```
+ 
+ 
+## Column {.tabset .tabset-fade}
 
+### Chart 6
+
+```{r three arm plot, eval=TRUE}
+
+library("reshape2")
+renderPlot({
+  
+ p =      threearmx()$result
+  
+ p <- p[complete.cases(p), ]
+ 
+ L <- melt(p, id="n", 
+           measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
+"at least 1") )
+ 
+ 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
+           ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
+                       ,  500))
+
+ 
+  all <- ggplot(data=L,
+       aes(x=n, y=value, 
+           colour=variable)) +
+  geom_line()  +
+ 
+  scale_y_continuous(breaks = 
+                       seq(input$y_rangepo2[1], input$y_rangepo2[2], by = 0.1),
+                       limits = c(input$y_rangepo2[1], input$y_rangepo2[2])) +
+    
+  scale_x_continuous(breaks =
+                       seq(input$x_rangepo2[1], input$x_rangepo2[2], skips), 
+                       limits = c(input$x_rangepo2[1],  input$x_rangepo2[2])) +
+    
+  theme_bw() +
+  theme(
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
+    legend.position="right",
+   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+    legend.key.size = unit(1.3, "cm"),
+    legend.key = element_rect(color = NA, fill = NA),
+
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
+    axis.line.x = element_line(color="black"),
+    axis.line.y = element_line(color="black"),
+
+    plot.caption=element_text(hjust = 0, size = 12),
+    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
+
+    strip.background = element_rect(colour = "black", fill = "white"),
+    panel.background = element_rect(fill = 'white', colour = 'white'),
+    plot.background = element_rect(fill = 'white', colour = 'white')
+  ) +
+
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+ 
+  labs(caption = paste("- Alpha the type I assertion probability." )) +
+
+  ggtitle(paste0(" Power (or total sample size) for three arms ") )
+
+
+#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+
+print(all)
+ 
+ })
+ 
+  
         
         
         
@@ -2631,15 +2753,304 @@ br()
         
         
         
+ 
+
+``` 
+
+Play the winner
+===
+
+
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+**Enter a best response rate and remaining 2 as equal worst response rates separated by commas**
+
+```{r ptw inputs}
+          
+    #pick.winnner(nSims=1e7,  mu=c(0.2, 0.3, 0.35), nStg1=279)
+
+
+          splitLayout(
+          textInput("ptw_h0",    
+          div(h5(tags$span(style="color:blue", "Hypothesised"))),    
+          value= "0.20, 0.20, 0.40"),)
+
+          splitLayout(
+          textInput("ptw_sims",    
+          div(h5(tags$span(style="color:blue", "Hypothesised"))),    
+          value= "1e4"),)
+
+          sliderInput('x_ranges_ptw', 'Plot x-range', value = c(0,140),
+                  min = 0, max = 1000,step=20,ticks=F)
+          
+          sliderInput('y_ranges_ptw', 'Plot y-range', value = c(0,1),
+                  min = 0, max = 1,step=.05,ticks=F)
+
+          br()
+      
+    
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+
+ ptw <- reactive({
+   
+   
+         ###my function
+          
+pick.winner = function(nSims=1e6,  mu=c(0.12, 0.12, 0.15), nStg1=470) { 
+
+  NumOfArms = length(mu)
+  p = matrix(NA, nrow=NumOfArms, ncol=nSims) # to store simulated data
+  #p <- as.data.frame(p)
+  #-------------------------create data
+  for (i in 1:NumOfArms)  {
+    
+    p[i,] = rbinom(nSims, nStg1, prob=mu[i])  #  
+    
+  }
+ 
+  #-----------------------------------------------------------------------examine simulations
+  # A wins outright
+  A1 <- (p[1, ] >  p[2, ])  & (p[1, ] >  p[3, ])  # indices where this condition is met
+  Z1 <- length(A1[A1==T])/nSims
+
+  # B wins outright
+  A2 <- (p[2, ] >  p[1, ])  & (p[2, ] >  p[3, ])  # ditto
+  Z2 <- length(A2[A2==T])/nSims
+  
+  # C wins outright
+  A3 <- (p[3, ] >  p[1, ])  & (p[3, ] >  p[2, ])  # ditto
+  Z3 <- length(A3[A3==T])/nSims
+  
+  # B and C draw and A less
+  A4 <- (p[2, ] ==  p[3, ])  & (p[1, ] <  p[3, ]) 
+  Z4 <- length(A4[A4==T])/nSims
+  
+  # A and C draw and B less
+  A5 <- (p[1, ] ==  p[3, ])  & (p[2, ] <  p[1, ]) 
+  Z5 <- length(A5[A5==T])/nSims
+  
+  # A and B draw and C less
+  A6 <- (p[1, ] ==  p[2, ])  & (p[3, ] <  p[1, ]) 
+  Z6 <- length(A6[A6==T])/nSims
+  
+  # all draw
+  A7 <- (p[1, ] ==  p[2, ])  & (p[3, ] ==  p[1, ]) 
+  Z7 <- length(A7[A7==T])/nSims 
+  
+  return(list(c(z1=Z1,z2=Z2,z3=Z3,z4=Z4,z5=Z5,z6=Z6,z7=Z7,z8=Z4/2 + Z5/2 + Z3)))
+  #-----------------------------------------------------------------------
+ 
+}
+####
+#as.vector(unlist(pick.winner(nSims=1e3,  mu=c(0.2, 0.3, 0.35), nStg1=279)))
+  
+       
+        h0         <-   (as.numeric(unlist(strsplit(input$ptw_h0,     ","))))
+      s        <-   (as.numeric(unlist(strsplit(input$ptw_sims,     ","))))
+      
+ #------------------------------------------------------------------------------------------------------------  
+       
+    
+        n <- seq(2,input$x_ranges_ptw[2], 1)
+       
+     
+       d <- matrix(NA, ncol=8 , nrow=length(n))
+       
+       d <- as.data.frame(d)
+
+#apply function to each row    
+
+  for( i in 1: dim(d)[1]) {
+ 
+           #d[i,] <-  pick.winner(nSims=s,  mu=h0, nStg1=n[i])
+           
+            d[i,] <-    as.vector(unlist(pick.winner(nSims=s,  mu=h0, nStg1=n[i])))
+            #d[i,] <-    as.vector(unlist(pick.winner(nSims=s,  mu=h0#)))
+            #d[i,] <-  runif(8)
+            
+        }
+        
+ 
+        
+        d$n <- n
+        
+        names(d) <- c(
+
+           "A wins outright",
+           "B wins outright",
+           "C wins outright"
+  ,"B and C draw and A less"
+  ,"A and C draw and B less"
+  ,"A and B draw and C less"
+  ,"All A B C draw"
+  ,"Probability of selecting best group", "n")
+
+         
+    d <- reshape2::melt(d, id.vars="n") 
+        
+    
+        
+ return(list(
+
+       d=d
+
+      ))
+        
+        
+ })
+        
+        
+        
+ 
+```
+ 
+ 
+## Column {.tabset .tabset-fade}
+
+### Chart x
+
+```{r ptw plot, eval=TRUE}
+ 
+renderPlot({
+  
+ p =      ptw()$d
+  
+ # <- p[complete.cases(p), ]
+ 
+     
+ 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  skips <- ifelse(input$x_ranges_ptw[2] <= 400, 10,
+           ifelse(input$x_ranges_ptw[2] > 400 & input$x_ranges_ptw[2] < 3000 ,200
+                       ,  500))
+
+  all <- ggplot(data=p,
+       aes(x=n, y=value, 
+           colour=variable)) +
+  geom_line()  +
+ 
+  scale_y_continuous(breaks =
+                       seq(input$y_ranges_ptw[1], input$y_ranges_ptw[2], by = 0.1),
+                       limits = c(input$y_ranges_ptw[1], input$y_ranges_ptw[2])) +
+
+  scale_x_continuous(breaks =
+                       seq(input$x_ranges_ptw[1], input$x_ranges_ptw[2], skips),
+                       limits = c(input$x_ranges_ptw[1],  input$x_ranges_ptw[2])) +
+
+  theme_bw() +
+  theme(
+    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+
+    legend.text=element_text(size=13),
+    legend.title=element_text(size=13.5, face="bold"),
+    legend.position="right",
+   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+    legend.key.size = unit(1.3, "cm"),
+    legend.key = element_rect(color = NA, fill = NA),
+
+    axis.text.x  = element_text(size=12),
+    axis.text.y  = element_text(size=12),
+    axis.line.x = element_line(color="black"),
+    axis.line.y = element_line(color="black"),
+
+    plot.caption=element_text(hjust = 0, size = 12),
+    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+    axis.title.y = element_text(size = rel(2), angle = 90),
+    axis.title.x = element_text(size = rel(2), angle = 0 ),
+
+    strip.background = element_rect(colour = "black", fill = "white"),
+    panel.background = element_rect(fill = 'white', colour = 'white'),
+    plot.background = element_rect(fill = 'white', colour = 'white')
+  ) +
+
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+
+  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+ 
+  labs(caption = paste("- No Alpha the type I assertion probability here!" )) +
+
+  ggtitle(paste0(" Play the winner ") )
+
+
+#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+
+print(all)
+ 
+ })
+ 
+          
         
         
         
 
+
+ 
+```
+
+### Listing
+
+ 
+
+```{r listings ptw}
+
+
+ DT::renderDataTable({
+
+    p <-  ptw()$d
+      
+       namez <- names(p)
+      
+  d1 <-  DT::datatable(p, rownames=FALSE,
+                  plugins = 'natural',
+                  #options = list(
+                  #  columnDefs = list(list(type = 'natural', targets = c(4,5))
+                                     # )
+                  )  #)
+    
+  
+     
+  
+     d1<- DT::formatRound(d1,  columns="value" ,  digits=3)
+      
+      d1
+})
+
+ 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+        
+        
+        
+        
+        
+        
+        
+        
+        
    
 ```
           
-References
+Wiki
 ====
+LINKS:
 
 [RMARKDOWN CHEATSHEET](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet)
  
@@ -2653,12 +3064,27 @@ References
 
 [SAMPLE SIZE CALCUALTION FOR THE WILCOXON MANN WHITNEY RANK SUM TEST ADJUSTING FOR TIES, AS USED IN PASS SOFTWARE FOR NON PROPORTIONAL ODDS POWER SAMPLE SIZE/CALCULATIONS, ZHAO 2008 ](https://github.com/eamonn2014/power/blob/main/papers%20for%20git/zhao%202008%20non%20prop%20odds%20calc.pdf)
 
+[The Sawtooth Power Function in Proportion Analyses](https://support.sas.com/documentation/cdl/en/statug/65328/HTML/default/viewer.htm#statug_power_examples02.htm)
+
+[Plotting power curve for a two-sided binomial test in R](https://stats.stackexchange.com/questions/157465/plotting-power-curve-for-a-two-sided-binomial-test-in-r)
+
+[Calculate Sample Size Needed to Test 1 Proportion: 1-Sample, 1-Sided](https://powerandsamplesize.com/Calculators/Test-1-Proportion/1-Sample-1-Sided)
+
+
+
+
+
+
+
+
+
+
 
 ```{r, refs}
 
 div(p(" "))
 div(p(" "))
-tags$span(style="color:blue", "Notes:") 
+tags$span(style="color:black", "NOTES:") 
 div(p(" "))
 tags$span(style="color:blue", "Countinuous endpoint using MESS::power_t_test") 
 div(p(" "))

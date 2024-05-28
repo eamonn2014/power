@@ -1,5 +1,5 @@
 ---
-title: "Power or sample size" 
+title: "Power or sample size various endpoints" 
 author: 
 output: 
   flexdashboard::flex_dashboard:
@@ -67,7 +67,7 @@ runtime: shiny
 
 ``` 
 
-Continuous endpoint
+Continuous
 ====
  
 
@@ -810,7 +810,7 @@ renderPlot({
 ``` 
 
 
-PO simulation
+Ordinal (sim)
 ===
 
 Column {.sidebar}
@@ -1417,7 +1417,7 @@ print(all)
   
 ``` 
 
-Survival endpoint
+Survival
 ====
 
 
@@ -1645,7 +1645,7 @@ print(all)
 ``` 
 
 
-Binary endpoint
+Binary
 ===
 
  
@@ -1803,7 +1803,7 @@ print(all)
 
 ``` 
 
-3 arm trial (continuous and binary) simulation with figure
+3 arm trial (continuous and binary sim. with fig.)
 ===
 
 
@@ -2082,7 +2082,7 @@ print(all)
 
 ``` 
 
-3 arm trial (continuous and binary) simulation
+3 arm trial (continuous and binary sim.)
 ===
 
 
@@ -2279,7 +2279,7 @@ br()
 
 ``` 
 
-One sample bernoulli
+Bernoulli
 ===
 
 
@@ -2295,7 +2295,7 @@ Column {.sidebar}
           splitLayout(
           textInput("p1_h0",    
           div(h5(tags$span(style="color:blue", "null hypothesis"))),    
-          value= "0.37, 0.50, 0.60"),)
+          value= "0.37, 0.50, 0.55"),)
 
           splitLayout(
           textInput("p1_h1",    
@@ -2311,13 +2311,9 @@ Column {.sidebar}
           textInput("target", 
           div(h5(tags$span(style="color:blue", "target at which check power"))), 
           value= "0.8, 0.9"),  )
-          
-          # splitLayout(
-          # textInput("consist.", 
-          # div(h5(tags$span(style="color:blue", "1/2 first time power reached/consistently above"))),value= "1"),  )
-          # 
-          sliderInput('x_ranges_bern', 'Plot x-range', value = c(0,100),
-                  min = 0, max = 5000,step=100,ticks=F)
+           
+          sliderInput('x_ranges_bern', 'Plot x-range', value = c(0,140),
+                  min = 0, max = 1000,step=20,ticks=F)
           
           sliderInput('y_ranges_bern', 'Plot y-range', value = c(0,1),
                   min = 0, max = 1,step=.05,ticks=F)
@@ -2331,15 +2327,14 @@ Column {.sidebar}
         h0         <-   (as.numeric(unlist(strsplit(input$p1_h0,     ","))))
         h1         <-   (as.numeric(unlist(strsplit(input$p1_h1,     ","))))
         target     <-   (as.numeric(unlist(strsplit(input$target,    ","))))
-       # consist.   <-   (as.numeric(unlist(strsplit(input$consist.,  ","))))
-#------------------------------------------------------------------------------------------------------------  
+ #------------------------------------------------------------------------------------------------------------  
         
     
        n= seq(2,input$x_ranges_bern[2], 1)
-       # h0=.37
-       # h1=c(.68, .5)
+       # h0=.5
+       # h1=c(.68)
        # sig.level=.025
-        n= seq(2,400, 1)
+       # n= seq(2,400, 1)
        #  target=c(.8,.9)
 
         
@@ -2358,26 +2353,29 @@ Column {.sidebar}
         
         d <- plyr::arrange(d, group)
         
-        
+         # id where power is reached 
          library(dplyr)
          d1 <-  d %>%
            group_by(group) %>% 
             mutate(Attain = Power > target)  
            
-        
+         # filter where power is reached
          PP <-   d1 %>% 
-  group_by(group) %>% 
-  filter(Power > target) #%>% 
+            group_by(group) %>% 
+            filter(Power > target) #%>% 
          
-           
-        PP <- PP %>%
+          # now we want to id where power does not drop below target
+         PP <- PP %>%
            group_by(group) %>% 
             mutate(conservative =  c(0, (diff(n)) >= 2))  
           
+         # select the minimum
          PP1 <-  PP %>%
            group_by(group) %>% 
-                      slice(1)
-      
+             slice_min(b, n = 1)
+                      #slice(1)
+         
+         
           PP2 <- PP%>%
            group_by(group) %>% 
             filter(conservative==1) 
@@ -2385,12 +2383,14 @@ Column {.sidebar}
           # second slice as ther may be multiple non consecutive gaps 
            PP2 <- PP2%>%
            group_by(group) %>% 
-            slice(1)
+             slice_max(b, n = 1)  # max rather than min (to ensure we dont pick another incidence after which power drops below our target)
         
         
           
           
         coord <- rbind(PP1, PP2)
+        
+       # coord$colr <- ifelse(coord$conservative %in% 1 ,"blue","black")
         
         # overwrite without target info
           d$group <- paste0("H0=",d$p0,", H1=",d$p1," \U1D7AA=",d$alpha )
@@ -2506,7 +2506,7 @@ renderPlot({
   
   #-----------------------------------------------------------------------
   skips <- ifelse(input$x_ranges_bern[2] <= 500, 10,
-           ifelse(input$x_ranges_bern[2] > 500 & input$x_ranges_bern[2] < 3000 ,200,  500))
+           ifelse(input$x_ranges_bern[2] > 500 & input$x_ranges_bern[2] < 1000 ,200,  500))
 
  
   #-----------------------------------------------------------------------
@@ -2520,7 +2520,7 @@ renderPlot({
  
    geom_point(data=coord, inherit.aes = FALSE,
               aes(x=n,y=Power), 
-              color='black',
+              color=ifelse(coord$conservative %in% 1 ,"red","black"),
               size=3) +
  
  
@@ -2562,7 +2562,8 @@ renderPlot({
   labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. Black dots denote when target power is reached.\n" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. For each target, black dots denote when a target power is reached.  As mentioned power can
+actually decrease as the sample size is increased. Thus, the relationship between power and sample size is not monotonic. If necessary, a red dot denotes the n after which power never dips below the target.\n" )) +
   ggtitle(paste0("Power (or sample size) for exact test of a simple null hypothesis in a Bernoulli experiment") ) 
 
 
@@ -2592,7 +2593,9 @@ print(all)
 
     p <-  berni()$coord
     
-    p$optimal <- p$phrase <- NULL
+    p$group <- p$Attain <- p$conservative <- NULL
+    
+    p <- plyr::arrange(p, p0,p1, target, b)
       
     namez <- names(p)
       
@@ -2602,7 +2605,7 @@ print(all)
                       columnDefs = list(list(type = 'natural', targets = c(4,5)))
                     ))
       
-    d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+    d1 <- DT::formatRound(d1,  columns=namez ,  digits=3)
       
     d1
 })

@@ -1872,52 +1872,51 @@ Column {.sidebar}
         
         d <- tidyr::expand_grid(d, target=target)
         
-        # work on finding the numerators
+        # work on finding the numerators, and point where power is always above target, 
+        # recall saw tooth relationship
 
         d$group <- paste0("H0=",d$p0,", H1=",d$p1," \U1D7AA=",d$alpha, "target=",d$target )
         
         d <- plyr::arrange(d, group)
         
-         # id where power is reached 
-         library(dplyr)
-         d1 <-  d %>%
-           group_by(group) %>% 
-            mutate(Attain = Power > target)  
+           # flag where power is reached 
+           library(dplyr)
+           # d1 <-  d %>%
+           #   group_by(group) %>% 
+           #    mutate(Attain = Power > target)  
            
-         # filter where power is reached
-         PP <-   d1 %>% 
-            group_by(group) %>% 
-            filter(Power > target) #%>% 
+           # filter where power is reached
+           PP <-   d %>% 
+              group_by(group) %>% 
+              filter(Power > target) 
          
-          # now we want to id where power does not drop below target
-         PP <- PP %>%
-           group_by(group) %>% 
-            mutate(conservative =  c(0, (diff(n)) >= 2))  
+           # now we want to id where power does not drop below target
+           # flag if there is a gap in n
+           PP <- PP %>%
+             group_by(group) %>% 
+              mutate(conservative =  c(0, (diff(n)) >= 2))  
           
-         # select the minimum
-         PP1 <-  PP %>%
-           group_by(group) %>% 
-             slice_min(b, n = 1)
-                      #slice(1)
-         
-         
+           # select the minimum , this is the point where power is reached initially
+           PP1 <-  PP %>%
+             group_by(group) %>% 
+               slice_min(b, n = 1)
+                    
+          # now focus on where power is consistetly reached with increasing n
+          # that is never dips below target power
           PP2 <- PP%>%
            group_by(group) %>% 
             filter(conservative==1) 
         
-          # second slice as ther may be multiple non consecutive gaps 
+          # second slice as there may be multiple non consecutive gaps 
            PP2 <- PP2%>%
            group_by(group) %>% 
-             slice_max(b, n = 1)  # max rather than min (to ensure we dont pick another incidence after which power drops below our target)
+             slice_max(b, n = 1)  # max rather than min (to ensure we don't pick another incidence after which power drops below our target)
         
-        
-          
-          
-        coord <- rbind(PP1, PP2)
+          # stick together
+          coord <- rbind(PP1, PP2)
       
-        
-        # overwrite without target info
-          d$group <- paste0("H0=",d$p0,", H1=",d$p1," \U1D7AA=",d$alpha )
+          # overwrite without target info
+          d$group <- paste0("H0=",d$p0,", H1=",d$p1,", \U1D7AA=",d$alpha )
         
   
  
@@ -2051,7 +2050,7 @@ renderPlot({
   labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. For each target, black dots denote when a target power is reached.  As mentioned power can actually decrease as the sample size is increased. Thus, the relationship between power and sample size is not monotonic. If necessary, a red dot denotes the n after which power never dips below the target.\n" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. For each target, black dots denote when a target power is reached.  As mentioned power can actually decrease as the sample size is increased. Thus, the relationship between power and sample size is not monotonic. \nIf necessary, a red dot denotes the n after which power never dips below the target.\n" )) +
   ggtitle(paste0("Power (or sample size) for exact test of a simple null hypothesis in a Bernoulli experiment") ) 
 
 
@@ -2081,7 +2080,7 @@ print(all)
 
     p <-  berni()$coord
     
-    p$group <- p$Attain <- p$conservative <- NULL
+    p$group <- p$conservative <- NULL
     
     p <- plyr::arrange(p, p0,p1, target, b)
       
@@ -2656,9 +2655,27 @@ References
 
 
 ```{r, refs}
- 
- 
 
+div(p(" "))
+div(p(" "))
+tags$span(style="color:blue", "Notes:") 
+div(p(" "))
+tags$span(style="color:blue", "Countinuous endpoint using MESS::power_t_test") 
+div(p(" "))
+tags$span(style="color:blue", "Proportional odds using Hmisc::popower") 
+div(p(" "))
+tags$span(style="color:blue", "Also PO power using simulation code") 
+div(p(" "))
+tags$span(style="color:blue", "Non PO power by coding the equation in Zhao 2008") 
+div(p(" "))
+tags$span(style="color:blue", "Survival endpoint based on gsDesign::nEvents") 
+div(p(" "))
+tags$span(style="color:blue", "Binary endpoint using Hmisc::bpower") 
+div(p(" "))
+tags$span(style="color:blue", "Bernoulli endpoint using gsDesign::nBinomial1Sample") 
+div(p(" "))
+tags$span(style="color:blue", "Three arm trial designs using simulation") 
+ 
 
  
     # div(p(" "))

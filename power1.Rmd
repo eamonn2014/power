@@ -2764,7 +2764,7 @@ Play the winner
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter a best response rate and remaining 2 as equal worst response rates separated by commas**
+**Enter 2 equal worst response rates separated by commas and best response rate**
 
 ```{r ptw inputs}
           
@@ -2773,15 +2773,15 @@ Column {.sidebar}
 
           splitLayout(
           textInput("ptw_h0",    
-          div(h5(tags$span(style="color:blue", "Hypothesised"))),    
-          value= "0.20, 0.20, 0.40"),)
+          div(h5(tags$span(style="color:blue", "Hyp. response rates: A, B, C"))),    
+          value= "0.20, 0.20, 0.30"),)
 
           splitLayout(
           textInput("ptw_sims",    
-          div(h5(tags$span(style="color:blue", "Hypothesised"))),    
+          div(h5(tags$span(style="color:blue", "No of Simulations"))),    
           value= "1e4"),)
 
-          sliderInput('x_ranges_ptw', 'Plot x-range', value = c(0,140),
+          sliderInput('x_ranges_ptw', 'Plot x-range', value = c(0,100),
                   min = 0, max = 1000,step=20,ticks=F)
           
           sliderInput('y_ranges_ptw', 'Plot y-range', value = c(0,1),
@@ -2790,17 +2790,28 @@ Column {.sidebar}
           br()
       
     
+```
+-----------------------------------------------------------------------
+**Default inputs : A one-way (3-group) randomized phase II selection design with binary outcomes will be used to determine the best group (or one of the best groups) for further study. The response rate of the worst group is assumed to be 0.2. To detect a best group response rate of 0.3 (or a maximum response rate difference of 0.1), with probability 0.9 of selecting the best group, the number of subjects needed will be 93 per group, for a total of 279 subjects across the 3 groups.**
+
+```{r note}         
           
-          
-          
-          
-          
-          
-          
-          
-          
-          
-          
+```
+-----------------------------------------------------------------------
+**More examples:**
+```{r note2} 
+```
+-----------------------------------------------------------------------
+**No per group 93, worst:0.2, best:0.30**
+```{r note3} 
+```
+-----------------------------------------------------------------------
+**No per group 44, worst:0.2, best:0.35**  
+```{r note4} 
+```
+-----------------------------------------------------------------------
+**No per group 26, worst:0.2, best:0.40**    
+```{r note5}           
 
  ptw <- reactive({
    
@@ -2852,19 +2863,16 @@ pick.winner = function(nSims=1e6,  mu=c(0.12, 0.12, 0.15), nStg1=470) {
   #-----------------------------------------------------------------------
  
 }
-####
-#as.vector(unlist(pick.winner(nSims=1e3,  mu=c(0.2, 0.3, 0.35), nStg1=279)))
-  
+ 
        
         h0         <-   (as.numeric(unlist(strsplit(input$ptw_h0,     ","))))
-      s        <-   (as.numeric(unlist(strsplit(input$ptw_sims,     ","))))
+          s        <-   (as.numeric(unlist(strsplit(input$ptw_sims,     ","))))
       
  #------------------------------------------------------------------------------------------------------------  
        
     
         n <- seq(2,input$x_ranges_ptw[2], 1)
        
-     
        d <- matrix(NA, ncol=8 , nrow=length(n))
        
        d <- as.data.frame(d)
@@ -2872,13 +2880,9 @@ pick.winner = function(nSims=1e6,  mu=c(0.12, 0.12, 0.15), nStg1=470) {
 #apply function to each row    
 
   for( i in 1: dim(d)[1]) {
- 
-           #d[i,] <-  pick.winner(nSims=s,  mu=h0, nStg1=n[i])
            
             d[i,] <-    as.vector(unlist(pick.winner(nSims=s,  mu=h0, nStg1=n[i])))
-            #d[i,] <-    as.vector(unlist(pick.winner(nSims=s,  mu=h0#)))
-            #d[i,] <-  runif(8)
-            
+           
         }
         
  
@@ -2978,7 +2982,7 @@ renderPlot({
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+  labs(y="Power", x = 'Number per group', color = "Scenario")+
  
   labs(caption = paste("- No Alpha the type I assertion probability here!" )) +
 

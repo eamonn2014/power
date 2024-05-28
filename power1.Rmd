@@ -2293,21 +2293,29 @@ Column {.sidebar}
     
 
           splitLayout(
-          textInput("p1_h0",    div(h5(tags$span(style="color:blue", "null hypothesis"))),    
-          value= ".37"),)
+          textInput("p1_h0",    
+          div(h5(tags$span(style="color:blue", "null hypothesis"))),    
+          value= "0.37, 0.50, 0.60"),)
 
           splitLayout(
-          textInput("p1_h1",    div(h5(tags$span(style="color:blue", "alternative hypothesis"))),    
+          textInput("p1_h1",    
+          div(h5(tags$span(style="color:blue", "alternative hypothesis"))),    
           value= ".68"),)
            
           splitLayout(
-          textInput("alpha_bern", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          textInput("alpha_bern", 
+          div(h5(tags$span(style="color:blue", "\U1D7AA (type I error) 1 sided"))), 
           value= "0.025"),  )
           
           splitLayout(
-          textInput("target", div(h5(tags$span(style="color:blue", "target at which check power"))), 
-          value= "0.8"),  )
+          textInput("target", 
+          div(h5(tags$span(style="color:blue", "target at which check power"))), 
+          value= "0.8, 0.9"),  )
           
+          # splitLayout(
+          # textInput("consist.", 
+          # div(h5(tags$span(style="color:blue", "1/2 first time power reached/consistently above"))),value= "1"),  )
+          # 
           sliderInput('x_ranges_bern', 'Plot x-range', value = c(0,100),
                   min = 0, max = 5000,step=100,ticks=F)
           
@@ -2316,44 +2324,112 @@ Column {.sidebar}
 
           br()
       
-   
-          
+
  berni <- reactive({
   
         sig.level  <-   (as.numeric(unlist(strsplit(input$alpha_bern,","))))    
         h0         <-   (as.numeric(unlist(strsplit(input$p1_h0,     ","))))
         h1         <-   (as.numeric(unlist(strsplit(input$p1_h1,     ","))))
-        target         <-   (as.numeric(unlist(strsplit(input$target,","))))
+        target     <-   (as.numeric(unlist(strsplit(input$target,    ","))))
+       # consist.   <-   (as.numeric(unlist(strsplit(input$consist.,  ","))))
 #------------------------------------------------------------------------------------------------------------  
         
     
-        n= seq(2,input$x_ranges_bern[2], 1)
-        # h0=.37
-        # h1=.68
-        # sig.level=.025
-        # n= seq(2,100, 1)
-        # target=.9
+       n= seq(2,input$x_ranges_bern[2], 1)
+       # h0=.37
+       # h1=c(.68, .5)
+       # sig.level=.025
+        n= seq(2,400, 1)
+       #  target=c(.8,.9)
+
         
-        d <- tidyr::expand_grid(h0=h0,  h1=h1, alpha= sig.level, target=target,  n=n )
-    
-        d$critical1 <-   with(d,qbinom(p = 1 - alpha, size = n, prob = h0))
-        d$power <- 1-  with(d,pbinom(critical1, n, p=h1))   # 1- beta
- 
-        d$optimal <- (d$power > d$target)
+
+        
+        d <- tidyr::expand_grid(h0=h0,  h1=h1, alpha= sig.level, beta=NULL,  n=n )
+        
+        d <-  gsDesign::nBinomial1Sample(p0 = d$h0, p1=d$h1,alpha = d$alpha, beta=NULL, n = d$n)
+        
+        d <- tidyr::expand_grid(d, target=target)
+        
+        # work on finding the numerators
         
         
+        d$group <- paste0("H0=",d$p0,", H1=",d$p1," \U1D7AA=",d$alpha, "target=",d$target )
         
-        d$phrase <- with(d, paste0("H0=",h0,", H1=",h1," \U1D7AA=",alpha ))
-     
+        d <- plyr::arrange(d, group)
         
         
- 
-        # get cordinates of first time powerr is reached.
-        library(dplyr)
-         coord <-  d %>%
-           group_by(h0,h1,alpha,target) %>% 
-            filter(optimal == TRUE) %>%
+         library(dplyr)
+         d1 <-  d %>%
+           group_by(group) %>% 
+            mutate(Attain = Power > target)  
+           
+        
+         PP <-   d1 %>% 
+  group_by(group) %>% 
+  filter(Power > target) #%>% 
+         
+           
+        PP <- PP %>%
+           group_by(group) %>% 
+            mutate(conservative =  c(0, (diff(n)) >= 2))  
+          
+         PP1 <-  PP %>%
+           group_by(group) %>% 
+                      slice(1)
+      
+          PP2 <- PP%>%
+           group_by(group) %>% 
+            filter(conservative==1) 
+        
+          # second slice as ther may be multiple non consecutive gaps 
+           PP2 <- PP2%>%
+           group_by(group) %>% 
             slice(1)
+        
+        
+          
+          
+        coord <- rbind(PP1, PP2)
+        
+        # overwrite without target info
+          d$group <- paste0("H0=",d$p0,", H1=",d$p1," \U1D7AA=",d$alpha )
+        
+        
+#         
+#         
+#         
+#         
+#     
+#         # d$critical1 <-   with(d,qbinom(p = 1 - alpha, size = n, prob = h0))
+#         # d$power   <- 1-  with(d,pbinom(critical1,     size = n, prob = h1))   # 1- beta
+#         # 
+#         #d$optimal <- (d$power > d$target)
+#         x$phrase <- with(x, paste0("H0=",x$p0,", H1=",x$p1,", \U1D7AA=",alpha ))
+#     
+#         
+# conT <- function() nBinomial1Sample(p0 = p0, p1 =p1, alpha = alpha, beta = .2, n = 1:10000, conservative = TRUE)
+# conF <- function() nBinomial1Sample(p0 = p0, p1 =p1, alpha = alpha, beta = .2, n = 1:10000, conservative = FALSE)
+#         
+#         
+#         
+#         nBinomial1Sample(p0 = 0.5, p1 = 0.6, alpha = 0.05, beta = .2, n = 1:10000, conservative = FALSE)
+# 
+#         
+#         require(tidyverse)
+#        x %>%
+#           group_by(p0,p1,alpha,beta) %>%
+#           group_map(~ conF())
+#                 
+#         
+#            
+#         
+#         # get when power is reached/exceeded.
+#         library(dplyr)
+#          coord <-  d %>%
+#            group_by(h0,h1,alpha,target) %>% 
+#             filter(optimal == TRUE) %>%
+#             slice(consist.)
 
  
   return(list(
@@ -2364,11 +2440,45 @@ Column {.sidebar}
 
  })
          
-         
-         
+ 
+ 
+ # checks
+ # n<-23 #samplesize
+ # #n <-24
+ # pval<-replicate(5000,{ #replicationsofexperiment
+ # x<-rbinom(1,size=n, #data-generatingmodelwith
+ # prob=0.37+0.31) # minimumrelevanteffect
+ # binom.test(x,n=n,p=0.37)$p.value #p-valueoftestagainstH0
+ # })
+ # mean(pval<0.05)
+ #         
+ # n <-81
+ # pval<-replicate(5000,{ #replicationsofexperiment
+ # x<-rbinom(1,size=n, #data-generatingmodelwith
+ # prob=0.5+0.18) # minimumrelevanteffect
+ # binom.test(x,n=n,p=0.5)$p.value #p-valueoftestagainstH0
+ # })
+ # mean(pval<0.05)
+ #         
+ #         
          
  
-
+# require(gsDesign)
+# nBinomial1Sample(
+#   p0 = 0.37,
+#   p1 = 0.68,
+#   alpha = 0.025,
+#   beta = NULL,
+#   n = 2:30,
+#   outtype = 2,
+#   conservative = FALSE
+# )
+# conservative	
+# operative when outtype=1 or 2 and beta != NULL. Default FALSE selects minimum sample 
+# size for which power is at least 1-beta. When conservative=TRUE, the minimum sample 
+# sample size for which power is at least 
+#1-beta and there is no larger sample size in the input n where power is less than 1-beta.
+            
    
         
  
@@ -2395,21 +2505,21 @@ renderPlot({
   p <- p[complete.cases(p), ]
   
   #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_ranges_bern[2] <= 1000, 50,
-           ifelse(input$x_ranges_bern[2] > 1000 & input$x_ranges_bern[2] < 3000 ,200,  500))
+  skips <- ifelse(input$x_ranges_bern[2] <= 500, 10,
+           ifelse(input$x_ranges_bern[2] > 500 & input$x_ranges_bern[2] < 3000 ,200,  500))
 
  
   #-----------------------------------------------------------------------
  
- all <-ggplot(p, aes(x = n, y = power, 
+ all <-ggplot(p, aes(x = n, y = Power, 
                      
-                    group = interaction(h0, h1, alpha),
+                    group = interaction(p0, p1, alpha),
                
-                     colour = phrase)) +
+                     colour = group)) +
    geom_line() +
  
    geom_point(data=coord, inherit.aes = FALSE,
-              aes(x=n,y=power), 
+              aes(x=n,y=Power), 
               color='black',
               size=3) +
  
@@ -2452,7 +2562,7 @@ renderPlot({
   labs(y="Power", x = 'Total Sample Size', color = "Scenario", linetype="Ratio" )+
  
   labs(y="Power", x = 'Total Sample Size', color = "Population probabilities", linetype="Ratio p1:p2" )+
-  labs(caption = paste("- Alpha the type I assertion probability = 0.05 two sided. 1:1 randomisation.  Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern.\n" )) +
+  labs(caption = paste("- Alpha the type I assertion probability. Binomial exact power (or the sample size to achieve a given power) of one binomial to a hypothesised population value.\n- As the sample size increases, the power of the test generally increases, but it does so in a stepwise manner due to the discrete nature of the binomial distribution, hence power fluctuates as the sample size\n changes, resulting in a sawtooth pattern. Black dots denote when target power is reached.\n" )) +
   ggtitle(paste0("Power (or sample size) for exact test of a simple null hypothesis in a Bernoulli experiment") ) 
 
 
@@ -2466,6 +2576,72 @@ print(all)
  
  
  
+
+
+ 
+```
+
+### Critical values
+
+ 
+
+```{r listings bern}
+
+
+ DT::renderDataTable({
+
+    p <-  berni()$coord
+    
+    p$optimal <- p$phrase <- NULL
+      
+    namez <- names(p)
+      
+    d1 <-  DT::datatable(p, rownames=FALSE,
+                    plugins = 'natural',
+                    options = list(
+                      columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                    ))
+      
+    d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+    d1
+})
+
+ 
+```
+
+### Listing
+
+ 
+
+```{r listings bern2}
+
+
+ DT::renderDataTable({
+
+    p <-  berni()$d
+    
+    p$optimal <- p$phrase <- NULL
+      
+    namez <- names(p)
+      
+    d1 <-  DT::datatable(p, rownames=FALSE,
+                    plugins = 'natural',
+                    options = list(
+                      columnDefs = list(list(type = 'natural', targets = c(4,5)))
+                    ))
+      
+    d1<- DT::formatRound(d1,  columns=namez ,  digits=3)
+      
+    d1
+})
+ 
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
+  #-----------------------------------------------------------------------
         
         
         

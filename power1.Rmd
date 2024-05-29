@@ -1,6 +1,6 @@
 ---
-title: "Power or sample size
-various endpoints" 
+title: "Power/sample size
+various endpoints v0.0.1" 
 author: 
 output: 
   flexdashboard::flex_dashboard:
@@ -1047,7 +1047,7 @@ br()
       
      tags$span(style="color:black;font-weight:bold;font-size: 20px;",  pors()$harrell,
                
-               "this is power from Hmisc:popower ") ,
+               "this is power from Hmisc::popower ") ,
      
         br(), 
      

@@ -3034,7 +3034,9 @@ print(all)
 
  
 #-------------------------------------------------------------------------------------------------------
- 
+
+
+ output$ptwwiki <- renderText({  # create interactive text t1 
    
 print(paste0(   
   
@@ -3056,17 +3058,16 @@ print(paste0(
        
          tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                  
-                 " it can be extremely harmful if a control arm is included. In the absence of a true treatment difference, all treatments have equal chance of being the “best looking.” The chance that an experimental treatment will appear better than the control is (K -1)/K, or 0.50 when K= 2, 0.67 when K= 3, and 0.75 when K=4. The chance of seeing an impressive difference between an experimental treatment and the control is at least 2/K of the probabilities presented.  ") ,
+                 "It can be extremely harmful if a control arm is included. In the absence of a true treatment difference, all treatments have equal chance of being the “best looking.” The chance that an experimental treatment will appear better than the control is (K -1)/K, or 0.50 when K= 2, 0.67 when K= 3, and 0.75 when K=4.(For example, this is simply, in the case of K=4, 3 ineffective active arms and 1 control...3/4). The chance of seeing an impressive difference between an experimental treatment and the control is at least 2/K of the probabilities presented.") ,
+   
+    tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+        
+                 "In no circumstances should a control arm be included in a selection design, because the temptation to draw error-prone inferences from it is too great. "),
      
          "."))
-   
-# })
  
+})
   
- 
-  
- 
-```
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------

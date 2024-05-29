@@ -3042,7 +3042,9 @@ print(paste0(
   
    tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
         
-                 "Excerpts from 'False Positive Rates of Randomized Phase II Designs', Manisha Desai et. al.:"),
+                 "Excerpts from 'False Positive Rates of Randomized Phase II Designs', Manisha Desai et. al.: "),
+   
+      br(),  br(), 
    
    tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
         
@@ -3062,7 +3064,7 @@ print(paste0(
    
     tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
         
-                 "In no circumstances should a control arm be included in a selection design, because the temptation to draw error-prone inferences from it is too great. "),
+                 " In no circumstances should a control arm be included in a selection design, because the temptation to draw error-prone inferences from it is too great. "),
      
          "."))
  

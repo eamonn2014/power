@@ -169,6 +169,8 @@ s22 <- reactive({
       
   side <- ifelse(Ac==1,"one.sided", ifelse(Ac==2,"two.sided", NA))
   
+ 
+  
   d <- tidyr::expand_grid(mu1 = Az, mu2=m2, alpha=A, ratio =Ab, n=n,  sd=Aa, side=side, sd.ratio=Ad)
   
   bvout <- matrix(NA, ncol=10, nrow=dim(d)[1])
@@ -178,10 +180,22 @@ s22 <- reactive({
 
   for( i in 1: dim(d)[1]) {
     
-    z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
+    # circumventing weird results as function need mu order fro 1 side
+    if (d$side[i] %in% "one.sided") {
+      
+     z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
+                             delta=d$mu2[i]-d$mu1[i], 
+                                          alternative=d$side[i],
+                                          sig.level=d$alpha[i])
+    } else {
+     
+     z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
                              delta=d$mu1[i]-d$mu2[i], 
                                           alternative=d$side[i],
                                           sig.level=d$alpha[i])
+    
+    }
+    
     x <- unlist(z)
     
    
@@ -1059,7 +1073,7 @@ br()
      
         tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                
-               "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome.") ,
+               "Proportional odds (PO) and ordinal logisitc regression are synonyms. Frank Harrell's Hmisc::lrm function is used in this app, the parameterisation is pr[Y >= j|X]. When Y=0,1, the parameterisation is exactly that for binary logistic regression. This may be different to other PO model functions. For example, the PASS power sample software's procedure 'Tests for Two Ordered Categorical Variables' uses the opposite parameterisation, so an odds ratio of say 3/2 in this app is equivalent to and odds ratio of 2/3 with that software and vice versa. If we consider higher categories as worse outcomes, the default 1.7 odds ratio, indicates that the treatment relative to  placebo in truth is associated with a 1.70 times increased odds of having a more serious outcome. There is a proportional effect of treatment across the scale of the ordinal outcome.") ,
 
    br(),  br(), 
      
@@ -1076,7 +1090,7 @@ br()
        "."))
 
  })
-# proportional effect of treatment across the scale of the ordinal outcome
+# 
  
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
@@ -2202,7 +2216,7 @@ Column {.sidebar}
      
           splitLayout(
           textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
-          value= "50000"),)                                
+          value= "1e4"),)                                
           
           sliderInput('x_rangepo2', 'Plot x-range', value = c(0,100),
                   min = 0, max = 5000,step=100,ticks=F)

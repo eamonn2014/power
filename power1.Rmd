@@ -3134,7 +3134,8 @@ div(p(" "))
 tags$span(style="color:blue", "Bernoulli endpoint using gsDesign::nBinomial1Sample") 
 div(p(" "))
 tags$span(style="color:blue", "Three arm trial designs using simulation") 
- 
+div(p(" "))
+tags$span(style="color:blue", "Pick a winner design using simulation") 
 
  
     # div(p(" "))

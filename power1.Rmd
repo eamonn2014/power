@@ -540,24 +540,14 @@ br()
 
 
  output$powiki <- renderText({  # create interactive text t1
-
  
- 
-    # text <- "Click here to visit Google"
-    # link <- "<a href='https://www.google.com'>Google</a>"
-    # paste0(text, " ", link)
-    # 
-    # 
    
 print(paste0(   
    
    tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
         
                  "Most sample size formulae involve nuisance parameters, the values of which are unknown when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). We use the example in Whitehead, 1988, which has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter the reference proportion as (0.17 + 0.274)/2 = 0.222 etc."),
-    
- # tags$a(href = "https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf", 
- #            target="_blank",
- #        tags$span(style="color:blue", "SAMPLE SIZE REVIEW IN A HEAD INJURY TRIAL WITH ORDERED CATEGORICAL RESPONSES, WHITHEAD 1998"),) ,
+     
    
            br(),  br(), 
        
@@ -2802,10 +2792,6 @@ Column {.sidebar}
 ```{r note2} 
 ```
 -----------------------------------------------------------------------
-**No per group 93, worst:0.2, best:0.30**
-```{r note3} 
-```
------------------------------------------------------------------------
 **No per group 44, worst:0.2, best:0.35**  
 ```{r note4} 
 ```
@@ -3033,7 +3019,54 @@ print(all)
       d1
 })
 
+ ### Column {.tabset .tabset-fade} <- this will split page in two
+```
+
+
+
+### Wiki
+
  
+```{r ptw wiki, eval=TRUE}
+
+ 
+ h5(htmlOutput("ptwwiki")) 
+
+ 
+#-------------------------------------------------------------------------------------------------------
+ 
+   
+print(paste0(   
+  
+   tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+        
+                 "Excerpts from 'False Positive Rates of Randomized Phase II Designs', Manisha Desai et. al.:"),
+   
+   tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+        
+                 "Patients meeting the same eligibility criteria are randomized to K experimental treatments. At the conclusion of the trial, the  treatment with the best outcome is selected for further testing regardless of the magnitude of its observed advantage over the other treatments. Statistical hypothesis testing is not performed. The attraction of the selection design lies in its simplicity and moderate sample sizes consistent with traditional Phase II studies. As intended, the design provides a high probability of taking the superior treatment forward when such a treatment exists.  "),
+   
+           br(),  br(), 
+       
+          tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+                 
+                 "When there is no difference among the treatments in true efficacy, a superior-looking treatment can still appear purely by chance. Unlike the  hypothesis-testing methodology, which assesses the likelihood of a false-positive finding, the selection design makes no attempt to distinguish the false positive from the true positive.") ,
+  
+        br(),  br(), 
+       
+         tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
+                 
+                 " it can be extremely harmful if a control arm is included. In the absence of a true treatment difference, all treatments have equal chance of being the “best looking.” The chance that an experimental treatment will appear better than the control is (K -1)/K, or 0.50 when K= 2, 0.67 when K= 3, and 0.75 when K=4. The chance of seeing an impressive difference between an experimental treatment and the control is at least 2/K of the probabilities presented.  ") ,
+     
+         "."))
+   
+# })
+ 
+  
+ 
+  
+ 
+```
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
@@ -3074,14 +3107,7 @@ LINKS:
 
 [Calculate Sample Size Needed to Test 1 Proportion: 1-Sample, 1-Sided](https://powerandsamplesize.com/Calculators/Test-1-Proportion/1-Sample-1-Sided)
 
-
-
-
-
-
-
-
-
+[Play the winner paper, Randomized Phase II clinical trial January 1986Cancer Treatment Reports 69(12):1375-81](https://www.researchgate.net/publication/19087470_Randomized_Phase_II_clinical_trial)
 
 
 ```{r, refs}

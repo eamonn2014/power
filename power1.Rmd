@@ -2194,7 +2194,7 @@ print(all)
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
+**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted** 
 
 ```{r threearm12, eval=TRUE}
           

@@ -2202,7 +2202,7 @@ Column {.sidebar}
           value= "0.5,0.5,0.5"),  )
           
           splitLayout(
-          textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error) 2 sided"))), 
           value= "0.05"),  )
      
           splitLayout(
@@ -2282,6 +2282,7 @@ Column {.sidebar}
           
           #----------------end function
  
+  
           
  threearmx <- reactive({
   
@@ -2301,7 +2302,10 @@ Column {.sidebar}
   
               bvout <- matrix(NA, ncol=6, nrow=length(n))
               bvout <- as.data.frame(bvout)
+
+ #---------------------------------------------------------------------------------------------------
    
+                # function to execute three.arm.v2 over range of N
     #apply function to each row    
         
    for( i in 1: length(n)) {
@@ -2652,96 +2656,96 @@ br()
  
 
 
+# if you uncode this you get repeat of figure on bottom half of simulation text tab
 
-
- 
-```
- 
- 
-## Column {.tabset .tabset-fade}
-
-### Chart 6
-
-```{r three arm plot, eval=TRUE}
-
-library("reshape2")
-renderPlot({
-  
- p =      threearmx()$result
-  
- p <- p[complete.cases(p), ]
- 
- L <- melt(p, id="n", 
-           measure.vars=c("Trt1 v Ctrl", "Trt2 v Ctrl", "Both v Ctrl", "Conjunctive (power to reject all 3 null hypotheses)", 
-                          "Disjunctive (power to reject at least one of 3 null hypotheses)", 
-"Power to reject at least one of the 2 comparisons to ctrl") )
- 
-   
- 
- 
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangepo2[2] <= 500, 10,
-           ifelse(input$x_rangepo2[2] > 500 & input$x_rangepo2[2] < 3000 ,200
-                       ,  500))
-
- 
-  all <- ggplot(data=L,
-       aes(x=n, y=value, 
-           colour=variable)) +
-  geom_line()  +
- 
-  scale_y_continuous(breaks = 
-                       seq(input$y_rangepo2[1], input$y_rangepo2[2], by = 0.1),
-                       limits = c(input$y_rangepo2[1], input$y_rangepo2[2])) +
-    
-  scale_x_continuous(breaks =
-                       seq(input$x_rangepo2[1], input$x_rangepo2[2], skips), 
-                       limits = c(input$x_rangepo2[1],  input$x_rangepo2[2])) +
-    
-  theme_bw() +
-  theme(
-    plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
-
-    legend.text=element_text(size=13),
-    legend.title=element_text(size=13.5, face="bold"),
-    legend.position="right",
-   #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
-    legend.key.size = unit(1.3, "cm"),
-    legend.key = element_rect(color = NA, fill = NA),
-
-    axis.text.x  = element_text(size=12),
-    axis.text.y  = element_text(size=12),
-    axis.line.x = element_line(color="black"),
-    axis.line.y = element_line(color="black"),
-
-    plot.caption=element_text(hjust = 0, size = 12),
-    strip.text.x = element_text(size = 16, colour = "black", angle = 0),
-    axis.title.y = element_text(size = rel(2), angle = 90),
-    axis.title.x = element_text(size = rel(2), angle = 0 ),
-
-    strip.background = element_rect(colour = "black", fill = "white"),
-    panel.background = element_rect(fill = 'white', colour = 'white'),
-    plot.background = element_rect(fill = 'white', colour = 'white')
-  ) +
-
-  #-----------------------------------------------------------------------
-  #-----------------------------------------------------------------------
-
-  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
- 
-  labs(caption = paste("- Alpha the type I assertion probability." )) +
-
-  ggtitle(paste0(" Power (or total sample size) for three arms ") )
-
-
-#https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
-all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
-
-print(all)
- 
- })
- 
+#  
+# ```
+#  
+#  
+# ## Column {.tabset .tabset-fade}
+# 
+# ### Chart 6
+# 
+# ```{r three arm plot, eval=TRUE}
+# 
+# library("reshape2")
+# renderPlot({
+#   
+#  p =      threearmx()$result
+#   
+#  p <- p[complete.cases(p), ]
+#  
+#  L <- melt(p, id="n", 
+#            measure.vars=c("Trt1 v Ctrl", "Trt2 v Ctrl", "Both v Ctrl", "Conjunctive (power to reject all 3 null hypotheses)", 
+#                           "Disjunctive (power to reject at least one of 3 null hypotheses)", 
+# "Power to reject at least one of the 2 comparisons to ctrl") )
+#  
+#    
+#  
+#  
+#   #-----------------------------------------------------------------------
+#   #-----------------------------------------------------------------------
+#   skips <- ifelse(input$x_rangepo2[2] <= 500, 10,
+#            ifelse(input$x_rangepo2[2] > 500 & input$x_rangepo2[2] < 3000 ,200
+#                        ,  500))
+# 
+#  
+#   all <- ggplot(data=L,
+#        aes(x=n, y=value, 
+#            colour=variable)) +
+#   geom_line()  +
+#  
+#   scale_y_continuous(breaks = 
+#                        seq(input$y_rangepo2[1], input$y_rangepo2[2], by = 0.1),
+#                        limits = c(input$y_rangepo2[1], input$y_rangepo2[2])) +
+#     
+#   scale_x_continuous(breaks =
+#                        seq(input$x_rangepo2[1], input$x_rangepo2[2], skips), 
+#                        limits = c(input$x_rangepo2[1],  input$x_rangepo2[2])) +
+#     
+#   theme_bw() +
+#   theme(
+#     plot.title=element_text(size = 19, face="bold"), plot.margin = unit(c(5.5,12,5.5,5.5), "pt"),
+# 
+#     legend.text=element_text(size=13),
+#     legend.title=element_text(size=13.5, face="bold"),
+#     legend.position="right",
+#    #https://ggplot2.tidyverse.org/articles/faq-customising.html gaps in legend
+#     legend.key.size = unit(1.3, "cm"),
+#     legend.key = element_rect(color = NA, fill = NA),
+# 
+#     axis.text.x  = element_text(size=12),
+#     axis.text.y  = element_text(size=12),
+#     axis.line.x = element_line(color="black"),
+#     axis.line.y = element_line(color="black"),
+# 
+#     plot.caption=element_text(hjust = 0, size = 12),
+#     strip.text.x = element_text(size = 16, colour = "black", angle = 0),
+#     axis.title.y = element_text(size = rel(2), angle = 90),
+#     axis.title.x = element_text(size = rel(2), angle = 0 ),
+# 
+#     strip.background = element_rect(colour = "black", fill = "white"),
+#     panel.background = element_rect(fill = 'white', colour = 'white'),
+#     plot.background = element_rect(fill = 'white', colour = 'white')
+#   ) +
+# 
+#   #-----------------------------------------------------------------------
+#   #-----------------------------------------------------------------------
+# 
+#   labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+#  
+#   labs(caption = paste("- Alpha the type I assertion probability." )) +
+# 
+#   ggtitle(paste0(" Power (or total sample size) for three arms ") )
+# 
+# 
+# #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
+# all <- all + guides(color = guide_legend(override.aes = list(linewidth = 3 )))
+# 
+# print(all)
+#  
+#  })
+#  
   
         
         

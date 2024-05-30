@@ -2185,21 +2185,21 @@ print(all)
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted** 
+**Enter 3 means or proportions (Ctrl, Trt1, Trt2) and select 1 or 2 for binary or continuous, Bonferroni adjusted**
 
 ```{r threearm12, eval=TRUE}
           
           splitLayout(
           textInput("link2",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
-          value= "1"),)
+          value= "2"),)
 
           splitLayout(
           textInput("mus2",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
-          value= ".9,.8,.7"),)
+          value= "0.9,0.4,0.6"),)
            
           splitLayout(
           textInput("sds2", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
-          value= "5.22,5.22,5.22"),  )
+          value= "0.5,0.5,0.5"),  )
           
           splitLayout(
           textInput("alphas2", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
@@ -2209,8 +2209,8 @@ Column {.sidebar}
           textInput("ss12",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
           value= "1e4"),)                                
           
-          sliderInput('x_rangepo2', 'Plot x-range', value = c(0,100),
-                  min = 0, max = 5000,step=100,ticks=F)
+          sliderInput('x_rangepo2', 'Plot x-range', value = c(0,80),
+                  min = 0, max = 5000,step=20,ticks=F)
           
           sliderInput('y_rangepo2', 'Plot y-range', value = c(0,1),
                   min = 0, max = 1,step=.05,ticks=F)
@@ -2312,10 +2312,12 @@ Column {.sidebar}
   
             }
        
+               
+              
         result <- cbind(bvout, d)
       
-        names(result)  <-c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
-                           "at least 1", "mu1", "mu2", "mu3", "sigma0", "sigma1", "sigma2", "alpha", "out.var", "n")
+        names(result)  <-c("Trt1 v Ctrl", "Trt2 v Ctrl", "Both v Ctrl", "Conjunctive (power to reject all 3 null hypotheses)", "Disjunctive (power to reject at least one of 3 null hypotheses)", 
+                           "Power to reject at least one of the 2 comparisons to ctrl", "mu1", "mu2", "mu3", "sigma0", "sigma1", "sigma2", "alpha", "out.var", "n")
  
      x <- result
 
@@ -2345,14 +2347,13 @@ renderPlot({
  p <- p[complete.cases(p), ]
  
  L <- melt(p, id="n", 
-           measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
-"at least 1") )
+           measure.vars=c("Trt1 v Ctrl", "Trt2 v Ctrl", "Both v Ctrl", "Conjunctive (power to reject all 3 null hypotheses)", "Disjunctive (power to reject at least one of 3 null hypotheses)",  "Power to reject at least one of the 2 comparisons to ctrl") )
  
  
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
-           ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
+  skips <- ifelse(input$x_rangepo2[2] <= 500, 10,
+           ifelse(input$x_rangepo2[2] > 500 & input$x_rangepo2[2] < 3000 ,200
                        ,  500))
 
  
@@ -2464,34 +2465,34 @@ print(all)
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter 3 means or proportions and select 1 or 2 for binary or continuous, Bonferroni adjusted**
+**Enter 3 means or proportions (Ctrl, Trt1, Trt2) and select 1 or 2 for binary or continuous, Bonferroni adjusted**
 
 ```{r threearm1}
           
           splitLayout(
           textInput("link",    div(h5(tags$span(style="color:blue", "1 for binary 2 for countinuous"))),
-          value= "1"),)
+          value= "2"),)
 
           splitLayout(
           textInput("mus",    div(h5(tags$span(style="color:blue", "3 means or 3 proportions "))),    
-          value= ".9,.8,.7"),)
+          value= "0.9,0.4,0.6"),)
            
           splitLayout(
           textInput("sds", div(h5(tags$span(style="color:blue", "3 SDs (ignored for binary data"))), 
-          value= "5.22,5.22,5.22"),  )
+          value= "0.5,0.5,0.5"),  )
           
           splitLayout(
-          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error)"))), 
+          textInput("alphas", div(h5(tags$span(style="color:blue", "\U1D7AA (type I error) 2 sided"))), 
           value= "0.05"),  )
      
           splitLayout(
           textInput("ss1",    div(h5(tags$span(style="color:blue", "no. of simulations"))),   
-          value= "500"),)                                
+          value= "1e4"),)                                
                              
                 
           splitLayout(
           textInput("N1",    div(h5(tags$span(style="color:blue", "sample size per arm"))),   
-          value= "40"),)        
+          value= "50"),)        
           
     
           br()
@@ -2548,15 +2549,17 @@ Column {.sidebar}
   }
   
   return (c( 
-    "power arm1 v placebo being signif. ",   formatz4(P1),
-    "power arm2 v placebo being signif. ",formatz4(P2),
-    "power for both arms v placebo being signif.", formatz4(P3) ,
-    "conjunctive (power to reject all null hypoth)", formatz4(P4) ,
-    "disjunctive (power to reject at least one null hypothesis) ", formatz4(P5) ,
-    "power for at least one arm signif. v placebo ", formatz4(P6) 
+    "Trt1 v Ctrl",   formatz4(P1),
+    "Trt2 v Ctrl",formatz4(P2),
+    "Both v Ctrl", formatz4(P3) ,
+    "Conjunctive (power to reject all 3 null hypotheses)", formatz4(P4) ,
+    "Disjunctive (power to reject at least one of 3 null hypotheses)", formatz4(P5) ,
+    "Power to reject at least one of the 2 comparisons to ctrl", formatz4(P6) 
   ))
 }
-
+  
+        
+        
 ##  
         
  x<-  three.arm(u0=mus[1], u1=mus[2], u2=mus[3], sigma0=sds[1], sigma1=sds[2], sigma2=sds[3], 
@@ -2669,14 +2672,17 @@ renderPlot({
  p <- p[complete.cases(p), ]
  
  L <- melt(p, id="n", 
-           measure.vars=c("trt1 v Ctrl", "trt2 v Ctrl", "both v Ctrl", "conjunctive", "disjunctive", 
-"at least 1") )
+           measure.vars=c("Trt1 v Ctrl", "Trt2 v Ctrl", "Both v Ctrl", "Conjunctive (power to reject all 3 null hypotheses)", 
+                          "Disjunctive (power to reject at least one of 3 null hypotheses)", 
+"Power to reject at least one of the 2 comparisons to ctrl") )
+ 
+   
  
  
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
-  skips <- ifelse(input$x_rangepo2[2] <= 1000, 50,
-           ifelse(input$x_rangepo2[2] > 1000 & input$x_rangepo2[2] < 3000 ,200
+  skips <- ifelse(input$x_rangepo2[2] <= 500, 10,
+           ifelse(input$x_rangepo2[2] > 500 & input$x_rangepo2[2] < 3000 ,200
                        ,  500))
 
  
@@ -2759,7 +2765,7 @@ Play the winner
 Column {.sidebar}
 -----------------------------------------------------------------------
 
-**Enter 2 equal worst response rates separated by commas and best response rate**
+**Enter 2 equal worst response rates separated by commas and best response rate, 3 groups only**
 
 ```{r ptw inputs}
           

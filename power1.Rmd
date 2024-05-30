@@ -384,11 +384,7 @@ Column {.sidebar}
 
    
           br()
-
- #          div(h5(tags$span(style="color:blue", "Most sample size formulae involve nuisance parameters, the values of which are unknown
- # when the trial is designed. With ordinal data, under proportional odds, it is the overall probability of each category that is required. For data of this type, with no allowance for prognostic variables, use of the proportional odds regression
- # model is equivalent to the Wilcoxon rank sum test (Mann Whitney test). The above example [Whitehead, 1983], has an expected placebo distribution 0.17, 0.30, 0.53 and a treatment outcome distribution of 0.274, 0346, 0.38, a log odds ratio 0.61. We enter p1 as (0.17+0.274)/2 = 0.222 etc.")))
-      
+ 
              
           
  por <- reactive({
@@ -546,8 +542,8 @@ br()
 #-------------------------------------------------------------------------------------------------------
 
   output$powiki2 <- renderText({
-    text <- "Click here to visit Whitehead, 1988"
-    link <- "<a href='https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf', target='_self', >Whitehead 1988</a>"
+    text <- "Click here to visit"
+    link <- "<a href='https://github.com/eamonn2014/power/blob/main/papers%20for%20git/Whitehead%201998%20sample%20size%20review%20in%20a%20head%20injury%20trial.pdf', target='_self', >Whitehead, 1988</a>"
     paste0(text, " ", link)
   })
 
@@ -573,7 +569,7 @@ print(paste0(
        
          tags$span(style="color:black;font-weight:bold;font-size: 20px;",   
                  
-                 "With the PO model, every category can even have only 1 entry. The WRST test works best when there are no ties (P values are more accurate). The PO model also works well if there are a huge numbers of ties. For example, even if 97% of data were at y=0, clumped at zero, this is no issue. The model handles ceiling effects and floor effects. If y is bimodal or trimodal, no problem again. The Hmisc package has the functions lrm (discrete ordnial and can handle 200 intercepts) and orm (more for continuious data and can handle 8,000 intercepts speedily and has other link functions also) for ordinal regression. ") ,
+                 "With the PO model, every category can even have only 1 entry. The WRST test works best when there are no ties (P values are more accurate). The PO model also works well if there are a huge numbers of ties. For example, even if 97% of data were at y=0, clumped at zero, this is no issue. The model handles ceiling effects and floor effects. If y is bimodal or trimodal, no problem again. The Hmisc package has the functions lrm (discrete ordnial and can handle 200 intercepts) and orm (more for continuious data and can handle 8,000 intercepts speedily and has other link functions also) for ordinal regression. Note to calculate means ans medians coding of levels is assummed to be 1,2,3...this is important.") ,
      
          "."))
    
@@ -776,12 +772,7 @@ print(paste0(
 ```{r means}
 
 # see ref 2
-
-
- k <- c(rep(0, 16), rep(1, 7), rep(2, 171), rep(3, 115), rep(4, 54))
- kp <- (c(as.vector(table(k))) / sum(table(k)))
-
-
+ 
 renderPlot({
   
      
@@ -791,7 +782,7 @@ renderPlot({
  
     ors <- seq(0.2, 5, length=200)
     
-    w <- pomodm(kx, kp, odds.ratio=1)
+    w <- pomodm(kx, kp, odds.ratio=1) #original mean and median
     
     z <- data.table(or=ors)
     u <- z[, as.list(w - pomodm(kx, kp, odds.ratio=or)), by=or]  # subtract

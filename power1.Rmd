@@ -114,12 +114,12 @@ Column {.sidebar}
           splitLayout(
           textInput("sidemx",
                     div(h5(tags$span(style="color:blue", "one or two sided alternative?"))),
-          value= "2, 1"),)
+          value= "2"),)
               
           splitLayout(
           textInput("romx",    
-                    div(h5(tags$span(style="color:blue", "ratio for unequal randomisation"))),   
-          value= "1,2"),)     
+                    div(h5(tags$span(style="color:blue", "n2/n2 ratio for randomisation"))),   
+          value= "1"),)     
                     
        
 
@@ -180,9 +180,9 @@ s22 <- reactive({
 
   for( i in 1: dim(d)[1]) {
     
-    # circumventing weird results as function need mu order fro 1 side
+    # circumventing weird results,  function needs mu order for 1 side
     if (d$side[i] %in% "one.sided") {
-      
+      # swap the mu
      z <-  MESS::power_t_test(n=d$n[i], sd=d$sd[i], power=NULL, ratio=d$ratio[i], sd.ratio=d$sd.ratio[i], 
                              delta=d$mu2[i]-d$mu1[i], 
                                           alternative=d$side[i],
@@ -2011,7 +2011,7 @@ $\alpha$ type I assertion error
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 99
+### Chart 6
 
 ```{r berni99, eval=TRUE}
 
@@ -2218,7 +2218,11 @@ Column {.sidebar}
           br()
           
           
-          
+ 
+```
+Normal approximation used for proportions
+```{r}
+       
           #----------------function
         # from multiarm power simulations4.R
         
@@ -2339,7 +2343,7 @@ Column {.sidebar}
  
 ## Column {.tabset .tabset-fade}
 
-### Chart 6
+### Chart 7
 
 ```{r surv plot8, eval=TRUE}
 
@@ -2403,11 +2407,11 @@ renderPlot({
   #-----------------------------------------------------------------------
   #-----------------------------------------------------------------------
 
-  labs(y="Power", x = 'Total Sample Size', color = "Scenario")+
+  labs(y="Power", x = 'Sample Size in each arm', color = "Scenario")+
  
   labs(caption = paste("- Alpha the type I assertion probability." )) +
 
-  ggtitle(paste0(" Power (or total sample size) for three arms ") )
+  ggtitle(paste0(" Power (or sample size) for three arms ") )
 
 
 #https://stackoverflow.com/questions/15059093/ggplot2-adjust-the-symbol-size-in-legends
@@ -2500,6 +2504,11 @@ Column {.sidebar}
           
     
           br()
+          
+          
+```
+Normal approximation used for proportions
+```{r}      
    
           
  threearm <- reactive({
@@ -2923,7 +2932,7 @@ pick.winner = function(nSims=1e6,  mu=c(0.12, 0.12, 0.15), nStg1=470) {
  
 ## Column {.tabset .tabset-fade}
 
-### Chart x
+### Chart 8
 
 ```{r ptw plot, eval=TRUE}
  
